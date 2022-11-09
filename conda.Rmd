@@ -64,6 +64,7 @@ library("kableExtra")
   * Mention conda-forge
 
 ---
+
 # Misc
 
     conda env export --from-history | grep -v prefix: > environment.yml
@@ -236,40 +237,6 @@ rule create_bwa_index:
 
 .tiny[modified from: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
 
-
----
-
-# Using a "module" system
-
-* Conda environments can be large and slow to create
-
-* Some cluster operators frown upon using it
-
---
-
-* UPPMAX and other clusters have a .green[module] command for getting access to software:
-```
-$ module load bioinfo-tools bwa
-```
-
---
-
-* Snakemake supports this with the `envmodules:` directive:
-```{bash, eval = FALSE}
-rule create_bwa_index:
-    output: ...
-    input: ...
-    envmodules:
-      "bioinfo-tools",
-      "bwa",
-    conda: "envs/bwa.yaml"  # ← Fallback
-    shell:
-        "bwa index {input}"
-```
-
-* Run with `snakemake --use-envmodules`
-
-* For reproducibility, [the Snakemake documentation recommends](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#using-environment-modules) to also include a `conda:` section
 
 ---
 
