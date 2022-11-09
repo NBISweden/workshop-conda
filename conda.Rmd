@@ -63,6 +63,10 @@ library("kableExtra")
   * Submit PR
   * Mention conda-forge
 
+---
+# Misc
+
+    conda env export --from-history | grep -v prefix: > environment.yml
 
 ---
 
