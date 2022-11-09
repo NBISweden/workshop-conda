@@ -65,9 +65,15 @@ library("kableExtra")
 
 ---
 
-# Misc
+# Misc/notes
 
     conda env export --from-history | grep -v prefix: > environment.yml
+
+
+* [conda-lock](https://github.com/conda-incubator/conda-lock)
+
+
+
 
 ---
 
@@ -239,7 +245,6 @@ rule create_bwa_index:
 
 
 ---
-
 # Summary
 
 There are many ways to use other .green[tools for reproducible research] together with Snakemake:
@@ -261,29 +266,17 @@ There are many ways to use other .green[tools for reproducible research] togethe
 * Package your entire workflow in a .green[Docker container]
 
 
-<!--
-
-* Further reading: [conda-lock](https://github.com/conda-incubator/conda-lock)
-
-
-  * This starts from an Ubuntu image, installs Miniconda, Snakemake, adds relevant files such as `the workflow files
-    * Install Miniconda and other required tools (_e.g._ Snakemake)
-    * Add the project files (e.g. `Snakefile`, `config.yaml`, `environment.yaml`)
-    * Install the Conda environment containing all packages run by the workflow
--->
+---
+# Material from 2020 "contributing to Bioconda" talk
 
 
 ---
-
-# Material from 2020 "contributing to Bioconda" talk
-
 # Contributing to
 
 <img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
 
 
 ---
-
 # Basics for users
 
 - A **channel** gives you access to extra Conda packages
