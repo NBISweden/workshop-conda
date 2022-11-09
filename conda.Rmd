@@ -1,0 +1,651 @@
+---
+title: "Using Conda and contributing recipes"
+subtitle: "Subtitle"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+    xaringan::moon_reader:
+        self-contained: true
+        seal: false
+        css: ["default", "template.css"]
+        nature:
+            slideNumberFormat: ""
+---
+
+layout: true
+<div class="scilife-logo"></div>
+<div class="nbis-logo"></div>
+
+---
+
+class: center, middle
+
+.HUGE[Title]
+
+```{r Setup, echo = FALSE, message = FALSE}
+# Knitr setup
+knitr::opts_chunk$set(message = FALSE,
+                      warning = FALSE)
+
+# Load packages
+library("dplyr")
+library("kableExtra")
+```
+
+---
+
+
+# Requested topics from the survery
+
+- 10 votes: Sharing Conda environments
+- 10 votes: Managing R and Python libraries with Conda
+- 8 votes: Writing a Conda recipe
+- 8 votes: Using Conda in notebooks and workflow managers
+- 8 votes: Working with Conda on different operating systems
+- 8 votes: Modifying and rolling back Conda environments
+
+---
+
+# Plan
+
+- Short introduction describing what Conda is (refresher)
+- Using Conda
+  * channel config has changed (strict channel order)
+  * on Rackham
+- Mamba
+
+- Conda support in Snakemake
+
+
+- Creating recipes
+  * Set up dev environment
+  * Write new recipe based on an existing one
+  * Test it locally (in different ways)
+  * Submit PR
+  * Mention conda-forge
+
+
+---
+
+# Material from BYOC workshop
+
+
+---
+
+# Conda: a .green[package], .green[dependency], and .green[environment] manager
+
+* Conda installs packages
+* Packages come from a central repository at https://anaconda.org/
+* Users can contribute their own packages via *channels*
+* Highly recommended: The [Bioconda](https://bioconda.github.io/) channel
+
+---
+
+# Using Conda
+
+* Install Conda, for example with [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+
+* Set up the [Bioconda](https://bioconda.github.io/) channel
+
+--
+
+* Install Samtools and BWA into a new **Conda environment** named `mapping`:
+```{bash, eval=FALSE}
+$ conda create -n mapping samtools bwa
+```
+
+--
+
+* Conda also installs all .green[dependencies] – other software required by Samtools and/or BWA.
+
+--
+
+To use the tools in the environment, .green[activate] it:
+```{bash, eval=FALSE}
+$ conda activate mapping
+$ samtools --version
+samtools 1.15.1
+```
+
+--
+* Install a tool into an existing environment:
+```{bash, eval=FALSE}
+conda install -n mapping bowtie2
+```
+(Leaving out `-n mapping` installs into the currently active environment.)
+
+---
+
+# Conda environments
+
+* You can have as many environments as you wish
+
+--
+
+* Environments are independent
+
+--
+
+* If something is broken, simply delete the environment and start over
+
+--
+
+```{bash, eval=FALSE}
+$ conda env remove -n mapping
+```
+
+--
+
+* To test a new tool, install it into a fresh Conda environment. Delete the environment to uninstall.
+
+--
+
+* Find packages by searching [anaconda.org](https://anaconda.org) or with `conda search`
+
+
+---
+
+# Conda environment files
+
+* Conda environments can be created from .green[environment files] in YAML format.
+
+--
+
+* Example `bwa.yaml`:
+
+```{yaml conda env one, eval = FALSE}
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bwa=0.7.17
+```
+
+--
+* Create the environment:
+```{bash, eval = FALSE}
+$ conda env create -n bwa -f bwa.yaml
+```
+
+---
+
+# Snakemake + Conda
+
+## Option one: A single environment for the entire workflow
+
+* Write an environment file (`environment.yaml`) that includes .green[all tools used by the workflow]:
+```{python conda env big, eval=FALSE}
+name: best-practice-smk
+channels:
+  - conda-forge
+  - bioconda
+  - default
+dependencies:
+  - snakemake=6.8.0   # ← Snakemake is part of the environment
+...
+  - multiqc=1.11   # ← Version numbers for reproducibility
+  - samtools=1.13
+```
+
+--
+* Create the environment, activate it and run the workflow within it:
+```{bash snakemake conda env, eval=FALSE}
+$ conda env create -f environment.yml
+$ conda activate best-practice-smk
+$ snakemake
+```
+
+--
+* Possibly helpful: `conda export -n envname > environment.yaml`
+
+.tiny[source: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
+
+---
+# Snakemake + Conda
+
+## Option two: Rule-specific environments
+
+You can let Snakemake create and activate Conda environments for you.
+
+--
+1. Create the environment file, such as `envs/bwa.yaml` (`envs/` is best practice)
+
+--
+1. Add the `conda:` directive to the rule:
+```{python conda rule, eval = FALSE}
+rule create_bwa_index:
+    output: ...
+    input: ...
+    conda: "envs/bwa.yaml"  # ← Path to environment YAML file
+    shell:
+        "bwa index {input}"
+```
+--
+1. Run `snakemake --use-conda`
+
+--
+
+* Snakemake creates the environment for you and re-uses it next time
+* If the YAML file changes, the environment is re-created
+* `conda:` does not work if you use `run:` (instead of `shell:` or `script:`)
+
+
+.tiny[modified from: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
+
+
+---
+
+# Using a "module" system
+
+* Conda environments can be large and slow to create
+
+* Some cluster operators frown upon using it
+
+--
+
+* UPPMAX and other clusters have a .green[module] command for getting access to software:
+```
+$ module load bioinfo-tools bwa
+```
+
+--
+
+* Snakemake supports this with the `envmodules:` directive:
+```{bash, eval = FALSE}
+rule create_bwa_index:
+    output: ...
+    input: ...
+    envmodules:
+      "bioinfo-tools",
+      "bwa",
+    conda: "envs/bwa.yaml"  # ← Fallback
+    shell:
+        "bwa index {input}"
+```
+
+* Run with `snakemake --use-envmodules`
+
+* For reproducibility, [the Snakemake documentation recommends](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#using-environment-modules) to also include a `conda:` section
+
+---
+
+# Containers
+
+* Containers represent another way of packaging applications
+
+--
+
+* Each container contains the application itself and .green[all system-level dependencies and libraries] (that is, a functional Linux installation)
+
+--
+
+* It is fully .green[isolated] from the other software on the machine:
+  By default, the tools in the container can only access what is in the container.
+
+--
+
+* The most common software for managing containers is .green[Docker]
+
+---
+
+# Containers
+
+## Docker nomenclature
+
+--
+* A Docker .green[image] is a standalone executable package of software (on disk)
+
+--
+* A .green[Dockerfile] is a recipe used to build a Docker .green[image]
+
+--
+* A Docker .green[container] is a standard unit of software run on the Docker Engine
+  (running an image gives a container)
+
+--
+* .green[DockerHub] is an online service for sharing Docker images
+
+--
+
+## Docker vs Singularity
+
+* On high-performance clusters (HPC), Docker is often not installed due to security concerns.
+  .green[Singularity] is often available as an alternative.
+
+--
+* Docker images can be converted into Singularity images
+
+--
+* → Singularity can be used to run Docker containers
+
+---
+
+# Running Snakemake jobs in containers
+
+Snakemake can run a jobs in a container using Singularity
+
+* Ensure your system has Singularity installed
+
+--
+
+* Find a Docker or Singularity image with the tool to run (https://biocontainers.pro/ or [DockerHub](https://hub.docker.com/))
+
+--
+
+* Add the `container:` directive to your rule:
+
+```{python singularity rule, eval = FALSE}
+rule minimap2_version:
+    container: "docker://quay.io/biocontainers/minimap2:2.24--h5bf99c6_0"   # ← "docker://" is needed
+    shell:
+        "minimap2 --version"
+```
+
+--
+
+* Start your workflow on the command line with `--use-singularity`
+
+```{bash snakemake use singularity, eval=FALSE}
+$ snakemake --use-singularity -j 1
+...
+Pulling singularity image docker://quay.io/biocontainers/minimap2:2.24--h5bf99c6_0.
+...
+Activating singularity image .../.snakemake/singularity/342e6ddbac7e5929a11e6ae9350454c0.simg
+INFO:    Converting SIF file to temporary sandbox...
+2.24-r1122
+INFO:    Cleaning up image...
+...
+```
+
+---
+
+# Containers – advanced topics
+
+* A [Docker image to use for *all* rules can be specified](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#running-jobs-in-containers)
+
+--
+* You can package your entire workflow into a Docker image by writing a .green[Dockerfile].
+  [See this example](https://github.com/NBISweden/workshop-reproducible-research/blob/0ee1eca78ccefbd06fbeb2c0aba37030230df90d/tutorials/containers/Dockerfile)
+  - Snakemake runs *inside* the container.
+  - To run the workflow, only Docker or Singularity is needed
+
+--
+* [Conda and containers can be combined]([Snakemake documentation](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#ad-hoc-combination-of-conda-package-management-with-containers): Specify a global container, run with `--use-conda --use-singularity`, and Snakemake creates the Conda environment within the container.
+
+--
+* [Snakemake can automatically generate a Dockerfile](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#containerization-of-conda-based-workflows)
+  that contains all Conda environments used by the rules of the workflow using the flag
+  `--containerize`.
+
+---
+
+# Summary
+
+There are many ways to use other .green[tools for reproducible research] together with Snakemake:
+
+--
+
+* Use .green[Git] for version control, backup and share your code
+
+--
+
+* Run rules or your entire workflow in .green[Conda] environments
+
+--
+
+* Run your rules in isolated Docker/Singularity .green[containers]
+
+--
+
+* Package your entire workflow in a .green[Docker container]
+
+
+<!--
+
+* Further reading: [conda-lock](https://github.com/conda-incubator/conda-lock)
+
+
+  * This starts from an Ubuntu image, installs Miniconda, Snakemake, adds relevant files such as `the workflow files
+    * Install Miniconda and other required tools (_e.g._ Snakemake)
+    * Add the project files (e.g. `Snakefile`, `config.yaml`, `environment.yaml`)
+    * Install the Conda environment containing all packages run by the workflow
+-->
+
+
+---
+
+# Material from 2020 "contributing to Bioconda" talk
+
+# Contributing to
+
+<img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
+
+
+---
+
+# Basics for users
+
+- A **channel** gives you access to extra Conda packages
+- Bioconda is a channel for bioinformatics
+- View its contents at <https://anaconda.org/bioconda>
+
+<img src="anaconda-screenshot.png" width="60%"/>
+
+---
+
+# Usage
+
+* See <https://bioconda.github.io/>
+* In short, add `bioconda` and `conda-forge` to your channels list
+* Bioconda packages are available for Linux and macOS
+
+---
+
+# Getting started as contributor
+
+* Read <https://bioconda.github.io/contributor/>
+* Join the chat at <https://gitter.im/bioconda/Lobby>
+
+---
+
+# Basics for package authors
+
+- Conda packages are `.tar.bz2` or `.conda` files
+- They are created with `conda build` from a `meta.yaml` file
+- This contains the packaging instructions
+- It is also called the “recipe”
+
+---
+
+# Bioconda specifics
+
+- Bioconda recipes are at<br/>
+  <https://github.com/bioconda/bioconda-recipes>
+- CI services are used for automation:
+    * Check recipes for common problems (linting)
+    * Build packages
+    * Test them
+    * Upload to Anaconda.org
+
+---
+
+# Preparation
+
+- Fork and clone `bioconda-recipes`
+
+<video width="800px" autoplay muted="true" loop="true">
+<source src="fork.webm" type="video/webm">
+</video>
+
+---
+
+# Steps for adding a recipe
+
+- Add `recipes/mypackagename/meta.yaml`
+- Open a PR (read the instructions)
+- Wait for tests to run
+- Update until all tests pass
+- Ask the BiocondaBot to add the "please review & merge" label
+- Make other requested changes
+
+---
+
+# Recipes
+
+- The recipe `meta.yaml` is in YAML format
+- It contains metadata, installation instructions and lists of dependencies
+- To create your own, start with an existing one
+- Other files are sometimes necessary:
+    * Patches
+    * Build scripts
+    * Test data
+
+---
+
+# Example
+
+    package:
+      name: igdiscover
+      version: 0.12
+    source:
+      url: https://pypi.io/<shortened>/igdiscover-0.12.tar.gz
+      sha256: dc0d139a5da<shortened>020eaa92121f7c36
+    build:
+      number: 0
+      script: python -m pip install --no-deps --ignore-installed .
+    requirements:
+      host:
+        - python >=3.6
+        - pip
+      run:
+        - python >=3.6
+        - igblast 1.10
+    test:
+      commands:
+        - igdiscover --help
+    about:
+      home: https://igdiscover.se/
+      license: MIT
+      summary: 'Analyze antibody repertoires and discover new V genes'
+
+
+
+---
+
+# The package section
+
+... defines the package’s name and version:
+
+
+    {% set name = "igdiscover" %}
+    {% set version = "0.12.2" %}
+
+    package:
+      name: "{{ name|lower }}"
+      version: "{{ version }}"
+
+* Recipes are actually Jinja2 templates
+* Jinja2 allows to set and use variables
+
+---
+
+# The source section
+
+... tells Conda which files to download
+
+    source:
+      url: https://pypi.io/packages/source/i/igdiscover/igdiscover-{{ version }}.tar.gz
+      sha256: dc0d139a5da7e672dff1dae7a1d64fcdf7a0a7379e5bca61020eaa92121f7c36
+
+* Download the package once manually, then use `sha256sum` to compute its SHA256 checksum
+* The checksum ensures that the files are ok
+* Conda unpacks the source automatically during the build
+
+---
+
+# The build section
+
+    build:
+      number: 0
+      script: python -m pip install --no-deps --ignore-installed .
+
+* `script` describes what one would run to install the package
+* If possible, copy this from another recipe
+* Put more complicated build scripts in a `build.sh` file instead
+* The build number is usually 0
+* If the recipe is updated, but the program version is the same, increase the build number by 1
+
+---
+
+# The requirements section
+
+... lists the dependencies
+
+    requirements:
+      host:
+        - python >=3.6
+        - pip
+      run:
+        - python >=3.6
+        - igblast 1.10
+
+* `build`: Build tools (e.g. Autotools, CMake)
+* `host`: Target-specific dependencies (shared libraries, Python)
+* `run`: Runtime dependencies (installed on user’s system along with package)
+
+---
+
+# The test section
+
+... describes how to test the package after it has been built
+
+    test:
+      commands:
+        - igdiscover --help
+
+* This is usually just a “smoke test”:
+  Running the tool with `--version` or `--help` to ensure it does not crash
+* To run the tests, Conda creates a fresh environment and installs the
+  newly-built package into it
+
+---
+
+# The about section
+
+This should be straightforward:
+
+    about:
+      home: https://igdiscover.se/
+      license: MIT
+      summary: 'Analyze antibody repertoires and discover new V genes'
+      description: |
+        This is a somewhat longer description
+        of the package, potentially across
+        multiple lines.
+
+---
+
+# Becoming a Bioconda member
+
+- In your PR, ping @bioconda/core and tell them you’d like to become a member.
+- As a member, you can open branches in the original repo and don’t have to work
+  in a fork (remember to delete your fork).
+
+---
+
+# The Bioconda bot
+
+- Automatically opens PRs for version bumps (of Python packages, for example)
+- Accepts various commands in PRs by writing `@BiocondaBot please ...`
+
+---
+
+# Misc
+
+* `conda debug`
+
+---
+
+# The End
+
+
