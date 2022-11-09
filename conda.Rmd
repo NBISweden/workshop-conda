@@ -72,7 +72,9 @@ library("kableExtra")
 
 * [conda-lock](https://github.com/conda-incubator/conda-lock)
 
-
+* Stumbling blocks:
+  - don’t just use `-c bioconda` (may work, but also need conda-forge in the general case)
+  - old configuration left in `~/.condarc` sometimes gets in the way
 
 
 ---
@@ -299,6 +301,8 @@ There are many ways to use other .green[tools for reproducible research] togethe
 
 * Read <https://bioconda.github.io/contributor/>
 * Join the chat at <https://gitter.im/bioconda/Lobby>
+
+<img src="gitter.png" width="90%"/>
 
 ---
 
