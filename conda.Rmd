@@ -89,7 +89,7 @@ library("kableExtra")
 * Conda installs packages
 * Packages come from a central repository at https://anaconda.org/
 * Users can contribute their own packages via *channels*
-* Highly recommended: The [Bioconda](https://bioconda.github.io/) channel
+* The [Bioconda](https://bioconda.github.io/) channel
 
 ---
 
@@ -98,6 +98,20 @@ library("kableExtra")
 * Install Conda, for example with [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
 * Set up the [Bioconda](https://bioconda.github.io/) channel
+
+---
+
+# Mamba
+
+* Install miniconda
+* Install `mamba` from conda-forge
+* Set up Bioconda
+
+There is also:
+
+* mambaforge
+* micromamba https://mamba.readthedocs.io/en/latest/installation.html#micromamba
+
 
 --
 
@@ -475,11 +489,10 @@ This should be straightforward:
     about:
       home: https://igdiscover.se/
       license: MIT
-      summary: 'Analyze antibody repertoires and discover new V genes'
+      summary: 'Analyze antibody repertoires'
       description: |
-        This is a somewhat longer description
-        of the package, potentially across
-        multiple lines.
+        Longer description of the package, maybe
+        across multiple lines.
 
 ---
 
