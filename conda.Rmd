@@ -9,6 +9,7 @@ output:
         css: ["default", "template.css"]
         nature:
             slideNumberFormat: ""
+            ratio: "16:9"
 ---
 
 layout: true
