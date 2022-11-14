@@ -62,7 +62,6 @@ library("kableExtra")
   * Write new recipe based on an existing one
   * Test it locally (in different ways)
   * Submit PR
-  * Mention conda-forge
 
 ---
 
@@ -80,29 +79,80 @@ library("kableExtra")
 
 ---
 
-# Material from BYOC workshop
-
-
----
-
 # Conda: a .green[package], .green[dependency], and .green[environment] manager
 
 * Conda installs packages
 * Packages come from a central repository at https://anaconda.org/
 * Users can contribute their own packages via *channels*
-* The [Bioconda](https://bioconda.github.io/) channel
+* Most important for us:
+  - The [conda-forge](https://conda-forge.org/) channel
+  - The [Bioconda](https://bioconda.github.io/) channel
+* Both are community-driven
 
 ---
 
-# Using Conda
+# Snakes everywhere (terms)
 
-* Install Conda, for example with [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+* .green[Conda]: The package manager
+* .green[`conda`]: The command-line program
+* .green[Anaconda, Inc.] (previously Continuum Analytics, Inc.): The company
+* .green[Anaconda]: A distribution of many data-science packages managed by `conda`
+* .green[miniconda]: A much smaller distribution that only contains `conda`
+* .green[Mamba]: A faster, drop-in replacement for `conda` (written in C++)
+* .green[Bioconda]: A bioinformatics-focused channel for Conda packages
+* .green[conda-forge]: A community-driven channel for everything else
 
-* Set up the [Bioconda](https://bioconda.github.io/) channel
+---
+
+# Using Conda on your laptop
+
+* Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and install it:
+
+```
+$ curl -sO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+$ bash Miniconda3-latest-Linux-x86_64.sh
+
+Welcome to Miniconda3 py39_4.12.0
+[...]
+```
+
+* Set up the [Bioconda](https://bioconda.github.io/) channel:
+
+```
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+```
+
+* Ensure `r` isn’t listed in your channels list in `~/.condarc`
+
+
+
+
+---
+
+# Using Conda on Rackham and Bianca
+
+For `conda` to be permanently available, do this *once* and log in again:
+```
+module load conda
+conda init  # Modifies your ~/.bashrc
+conda config --set auto_activate_base false
+```
+
+Or run `module load conda` and `source conda_init.sh` everytime you want to use
+`conda`.
+
+* Bioconda, conda-forge etc. are pre-configured.
+* They point to *local mirrors*
+* This works even on Bianca
 
 ---
 
 # Mamba
+
+* https://mamba.readthedocs.io/en/latest/
 
 * Install miniconda
 * Install `mamba` from conda-forge
