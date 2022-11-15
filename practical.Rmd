@@ -4,11 +4,11 @@ subtitle: "Practical"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
-    self-contained: true
-    seal: false
-    css: ["default", "template.css"]
-    nature:
-      slideNumberFormat: ""
+	self-contained: true
+	seal: false
+	css: ["default", "template.css"]
+	nature:
+	  slideNumberFormat: ""
 ---
 
 layout: true
@@ -31,7 +31,7 @@ class: center, middle
 ```{r Setup, echo = FALSE, message = FALSE}
 # Knitr setup
 knitr::opts_chunk$set(message = FALSE,
-                      warning = FALSE)
+					  warning = FALSE)
 
 # Load packages
 library("dplyr")
@@ -50,11 +50,79 @@ bioconda so there is a "solution" for comparison.
 
 --
 
-## Setup 
+## Setup
 
 ```{bash setup, eval=FALSE }
 mkdir -p exercises
 ```
+
+---
+
+# Conda packages<sup>1</sup>
+
+````{verbatim}
+$ tree -A recipes/bioawk
+recipes/bioawk/
+├── build.sh
+└── meta.yaml
+````
+
+--
+
+- `meta.yaml` is required
+
+--
+
+- optional:
+
+--
+
+  - `build.sh`
+
+--
+
+  - (small) test files
+
+--
+
+  - license file
+
+
+.footnote[
+.small[[1] cf https://bioconda.github.io/tutorials/gcb2020.html]]
+
+
+---
+
+# Important meta.yaml sections
+
+--
+
+- `package`: name and version
+
+--
+
+- `source`: url and SHA256/MD5 checksums
+
+--
+
+- `build`: build number, platforms to skip, “noarch” information
+
+--
+
+- `requirements`: packages for building, linking, running
+
+--
+
+- `test`: commands/imports
+
+--
+
+- `about`: webpage, license, summary of what the package does
+
+--
+
+- `extras`: comments, maintainers, etc.
 
 
 ---
@@ -78,34 +146,45 @@ cd exercises/e1
 
 ---
 
-# 1. Clone the repo
+# 1. Edit the meta file
 
-Start by cloning the repo so that we know how to build it:
+
+Start by creating a directory for the recipe:
 
 ```{bash, eval=FALSE }
-git clone git@github.com:lh3/bioawk.git
-ls bioawk | head
+mkdir -p bioawk
 ```
-
-```{bash list-bioawk, echo=FALSE}
-ls exercises/e1/bioawk | head
-```
---
-
-There is a Makefile that we will use to build the package.
 
 --
 
-But first, lets add a meta file describing the recipe:
+and open the file `bioawk/meta.yaml` in an editor. Following conda documentation<sup>1</sup>, we need to complete the following template:
 
-```{bash e1-add-meta-file, eval=FALSE}
-mkdir -p bioawk.recipe
-echo -e "package:\n  name: bioawk\n" > bioawk.recipe/meta.yaml
-```
+````{verbatim, lang="YAML" }
+package:
+  name:
+  version:
 
-```{bash e1-show-meta-1, echo=FALSE }
-head -2 recipes/bioawk/meta.yaml
-```
+source:
+  url:
+  sha256:
+
+requirements:
+  build:
+	-
+
+  run:
+	-
+
+test:
+  commands:
+	-
+
+about:
+  home:
+````
+
+.footnote[
+.small[[1] https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/build-pkgs.html#editing-the-meta-yaml-file]]
 
 ---
 
@@ -122,23 +201,107 @@ should bring you to [https://github.com/lh3/bioawk/releases](https://github.com/
 
 Click on the tarball link [Source code
 (tar.gz)](https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz)
-to download the tarball. 
+to download the tarball.
+```{bash e1-download-bioawk, echo=FALSE }
+if [ ! -e bioawk.v1.0.tar.gz ]; then
+	wget https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz -O bioawk.v1.0.tar.gz 2>/dev/null
+fi
+```
+
 
 Run sha256 on the tarball and record the output:
 
 ```{bash e1-tarball-sha256 }
-wget https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz -O bioawk.v1.0.tar.gz 2>/dev/null
 sha256sum bioawk.v1.0.tar.gz
 ```
 
 --
 
 Now we can add this to the .green[source] section in the meta.yaml
-file (note also that we added the .green[version] number):
+file, along with .green[package name] and .green[version] number:
 
-```{bash e1-show-meta-url, echo=FALSE}
-head -7 recipes/bioawk/meta.yaml
+
+````{verbatim}
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+````
+
+---
+
+
+# 3. Clone the repo
+
+Next we need to know how to compile the repo and gather information
+about dependencies and requirements.
+
+Start by cloning the repo:
+
+```{bash, eval=FALSE }
+git clone git@github.com:lh3/bioawk.git bioawk.git
+ls bioawk.git | head -5
 ```
+
+```{bash list-bioawk, echo=FALSE}
+if [ ! -e exercises/e1/bioawk.git ]; then
+	git clone git@github.com:lh3/bioawk.git exercises/e1/bioawk.git
+fi
+ls exercises/e1/bioawk.git | head -5
+```
+--
+
+There is a README.md that hopefully provides installation
+instructions, and a Makefile that contains instructions to compile the
+package. If we scroll through the former, we will find the following
+information:
+
+```{bash e1-head-readme, echo=FALSE }
+head -12 exercises/e1/bioawk.git/README.md | tail -3
+```
+
+--
+
+.green[bison] and .green[libz] are two dependencies.
+
+---
+
+# Add dependencies
+
+Add the dependencies .green[bison] and .green[libz] to the
+.green[requirements] section, .green[build] keyword:
+
+````{verbatim}
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+
+requirements:
+  build:
+	- zlib
+	- bison
+````
+
+---
+
+# 4. Inspect build instructions
+
+Examine the Makefile and look for the .green[bioawk] target; linked
+packages are defined with the .green[-l] option:
+
+````{verbatim}
+bioawk:ytab.o $(OFILES)
+	$(CC) $(CFLAGS) ytab.o $(OFILES) $(ALLOC) -o $@ -lm -lz
+````
+
+
 
 
 ---
@@ -148,8 +311,4 @@ head -7 recipes/bioawk/meta.yaml
 ---
 
 # Example 3 - R package
-
----
-
-# Using conda-skeleton
 
