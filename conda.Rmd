@@ -20,7 +20,13 @@ layout: true
 
 class: center, middle
 
-.HUGE[Title]
+# Conda: A title
+
+### Marcel Martin
+
+2022-11-17
+
+
 
 ```{r Setup, echo = FALSE, message = FALSE}
 # Knitr setup
@@ -72,9 +78,7 @@ library("kableExtra")
 
 * [conda-lock](https://github.com/conda-incubator/conda-lock)
 
-* Stumbling blocks:
-  - don’t just use `-c bioconda` (may work, but also need conda-forge in the general case)
-  - old configuration left in `~/.condarc` sometimes gets in the way
+* `conda debug`
 
 
 ---
@@ -98,7 +102,7 @@ library("kableExtra")
 * .green[Anaconda, Inc.] (previously Continuum Analytics, Inc.): The company
 * .green[Anaconda]: A distribution of many data-science packages managed by `conda`
 * .green[miniconda]: A much smaller distribution that only contains `conda`
-* .green[Mamba]: A faster, drop-in replacement for `conda` (written in C++)
+* .green[Mamba]: A faster, drop-in replacement for `conda`
 * .green[Bioconda]: A bioinformatics-focused channel for Conda packages
 * .green[conda-forge]: A community-driven channel for everything else
 
@@ -108,7 +112,7 @@ library("kableExtra")
 
 * Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and install it:
 
-```
+```{bash, eval=FALSE}
 $ curl -sO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 $ bash Miniconda3-latest-Linux-x86_64.sh
 
@@ -117,17 +121,20 @@ Welcome to Miniconda3 py39_4.12.0
 ```
 
 * Set up the [Bioconda](https://bioconda.github.io/) channel:
-
-```
+```{bash, eval=FALSE}
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 ```
+* Bioconda builds upon `conda-forge`
+
+--
+
+## Pitfalls
 
 * Ensure `r` isn’t listed in your channels list in `~/.condarc`
-
-
+* Don’t just use `-c bioconda`
 
 
 ---
@@ -135,7 +142,7 @@ conda config --set channel_priority strict
 # Using Conda on Rackham and Bianca
 
 For `conda` to be permanently available, do this *once* and log in again:
-```
+```{bash, eval=FALSE}
 module load conda
 conda init  # Modifies your ~/.bashrc
 conda config --set auto_activate_base false
@@ -150,18 +157,47 @@ Or run `module load conda` and `source conda_init.sh` everytime you want to use
 
 ---
 
-# Mamba
+# Highly recommended: [Mamba](https://mamba.readthedocs.io/en/latest/)
 
-* https://mamba.readthedocs.io/en/latest/
+* A replacement for `conda` with a much faster dependency solver
+* Same command-line interface
+* Install from `conda-forge`:
+```{bash, eval=FALSE}
+conda install -n base mamba
+```
+* .green[Already installed on Rackham]
 
-* Install miniconda
-* Install `mamba` from conda-forge
-* Set up Bioconda
+--
 
-There is also:
+## There is also
 
-* mambaforge
-* micromamba https://mamba.readthedocs.io/en/latest/installation.html#micromamba
+* [Mambaforge](https://github.com/conda-forge/miniforge):
+  Alternative to miniconda with pre-installed Mamba and activated conda-forge
+
+
+---
+
+# Conda environments
+
+Anything installed by Conda is installed into a **Conda environment**.
+
+Each Conda environment contains a set of packages.
+
+An environment named `base` exists by default.
+
+It contains `conda` itself and its dependencies, such as Python.
+
+To use the software in an environment, it needs to be **activated**.
+
+Environments are .green[independent]:
+
+- Environment *a* can have version *x* of a tool, while environment *b* has
+  the same tool in version *y*.
+- Environments
+
+
+The `base` environment is the only one that cannot easily be deleted and re-created, so keep it clean:
+It should only contain Conda and Mamba (and related)
 
 
 --
@@ -559,15 +595,5 @@ This should be straightforward:
 
 - Automatically opens PRs for version bumps (of Python packages, for example)
 - Accepts various commands in PRs by writing `@BiocondaBot please ...`
-
----
-
-# Misc
-
-* `conda debug`
-
----
-
-# The End
 
 
