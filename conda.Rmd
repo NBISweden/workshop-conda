@@ -20,7 +20,7 @@ layout: true
 
 class: center, middle
 
-# Conda: A title
+# Managing packages with Conda
 
 ### Marcel Martin
 
@@ -40,15 +40,12 @@ library("kableExtra")
 
 ---
 
-
 # Requested topics from the survery
 
-- 10 votes: Sharing Conda environments
 - 10 votes: Managing R and Python libraries with Conda
-- 8 votes: Writing a Conda recipe
-- 8 votes: Using Conda in notebooks and workflow managers
 - 8 votes: Working with Conda on different operating systems
 - 8 votes: Modifying and rolling back Conda environments
+- 8 votes: Writing a Conda recipe
 
 ---
 
@@ -73,12 +70,11 @@ library("kableExtra")
 
 # Misc/notes
 
-    conda env export --from-history | grep -v prefix: > environment.yml
-
-
 * [conda-lock](https://github.com/conda-incubator/conda-lock)
 
 * `conda debug`
+
+* conda env create, conda create
 
 
 ---
@@ -112,7 +108,7 @@ library("kableExtra")
 
 * Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and install it:
 
-```{bash, eval=FALSE}
+```bash
 $ curl -sO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 $ bash Miniconda3-latest-Linux-x86_64.sh
 
@@ -121,7 +117,7 @@ Welcome to Miniconda3 py39_4.12.0
 ```
 
 * Set up the [Bioconda](https://bioconda.github.io/) channel:
-```{bash, eval=FALSE}
+```bash
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
@@ -142,7 +138,7 @@ conda config --set channel_priority strict
 # Using Conda on Rackham and Bianca
 
 For `conda` to be permanently available, do this *once* and log in again:
-```{bash, eval=FALSE}
+```bash
 module load conda
 conda init  # Modifies your ~/.bashrc
 conda config --set auto_activate_base false
@@ -162,10 +158,10 @@ Or run `module load conda` and `source conda_init.sh` everytime you want to use
 * A replacement for `conda` with a much faster dependency solver
 * Same command-line interface
 * Install from `conda-forge`:
-```{bash, eval=FALSE}
+```bash
 conda install -n base mamba
 ```
-* .green[Already installed on Rackham]
+* Mamba is .green[already installed on Rackham]
 
 --
 
@@ -203,7 +199,7 @@ It should only contain Conda and Mamba (and related)
 --
 
 * Install Samtools and BWA into a new **Conda environment** named `mapping`:
-```{bash, eval=FALSE}
+```bash
 $ conda create -n mapping samtools bwa
 ```
 
@@ -214,7 +210,7 @@ $ conda create -n mapping samtools bwa
 --
 
 To use the tools in the environment, .green[activate] it:
-```{bash, eval=FALSE}
+```bash
 $ conda activate mapping
 $ samtools --version
 samtools 1.15.1
@@ -222,7 +218,7 @@ samtools 1.15.1
 
 --
 * Install a tool into an existing environment:
-```{bash, eval=FALSE}
+```bash
 conda install -n mapping bowtie2
 ```
 (Leaving out `-n mapping` installs into the currently active environment.)
@@ -243,7 +239,7 @@ conda install -n mapping bowtie2
 
 --
 
-```{bash, eval=FALSE}
+```bash
 $ conda env remove -n mapping
 ```
 
@@ -258,7 +254,25 @@ $ conda env remove -n mapping
 
 ---
 
+# Sharing environments
+
+    conda env export --from-history | grep -v prefix: > environment.yaml
+
+    - 10 votes: Sharing Conda environments
+  * environment files
+  * `conda env export`
+  * `conda list --export`
+  * `conda list --explicit`
+
+
+* Bioconda packages are available for Linux and macOS
+* conda-forge packages are also (often) available for Windows
+
+
 # Conda environment files
+
+--
+* Possibly helpful: `conda export -n envname > environment.yaml`
 
 * Conda environments can be created from .green[environment files] in YAML format.
 
@@ -277,18 +291,18 @@ dependencies:
 
 --
 * Create the environment:
-```{bash, eval = FALSE}
+```bash
 $ conda env create -n bwa -f bwa.yaml
 ```
 
 ---
 
-# Snakemake + Conda
+# Using Conda with Snakemake: Option one
 
-## Option one: A single environment for the entire workflow
+## A single environment for the entire workflow
 
 * Write an environment file (`environment.yaml`) that includes .green[all tools used by the workflow]:
-```{python conda env big, eval=FALSE}
+```python
 name: best-practice-smk
 channels:
   - conda-forge
@@ -303,21 +317,18 @@ dependencies:
 
 --
 * Create the environment, activate it and run the workflow within it:
-```{bash snakemake conda env, eval=FALSE}
+```bash
 $ conda env create -f environment.yml
 $ conda activate best-practice-smk
 $ snakemake
 ```
 
---
-* Possibly helpful: `conda export -n envname > environment.yaml`
-
 .tiny[source: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
 
 ---
-# Snakemake + Conda
+# Using Conda with Snakemake: Option two
 
-## Option two: Rule-specific environments
+## Rule-specific environments
 
 You can let Snakemake create and activate Conda environments for you.
 
@@ -326,7 +337,7 @@ You can let Snakemake create and activate Conda environments for you.
 
 --
 1. Add the `conda:` directive to the rule:
-```{python conda rule, eval = FALSE}
+```python
 rule create_bwa_index:
     output: ...
     input: ...
@@ -346,40 +357,31 @@ rule create_bwa_index:
 
 .tiny[modified from: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
 
+---
+
+# Nextflow and Conda
+
+* [Nextflow also has native Conda support](https://www.nextflow.io/docs/latest/conda.html)
+* Set `conda.enabled = true` in your pipeline configuration
+* Specify either Conda package names:
+```groovy
+process foo {
+  conda 'bwa samtools multiqc'
+
+  ...
+}
+```
+* ... or the path to an environment file:
+```groovy
+process foo {
+  conda 'path/to/my/environment.yaml'
+
+  ...
+}
+```
 
 ---
-# Summary
 
-There are many ways to use other .green[tools for reproducible research] together with Snakemake:
-
---
-
-* Use .green[Git] for version control, backup and share your code
-
---
-
-* Run rules or your entire workflow in .green[Conda] environments
-
---
-
-* Run your rules in isolated Docker/Singularity .green[containers]
-
---
-
-* Package your entire workflow in a .green[Docker container]
-
-
----
-# Material from 2020 "contributing to Bioconda" talk
-
-
----
-# Contributing to
-
-<img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
-
-
----
 # Basics for users
 
 - A **channel** gives you access to extra Conda packages
@@ -390,51 +392,12 @@ There are many ways to use other .green[tools for reproducible research] togethe
 
 ---
 
-# Usage
-
-* See <https://bioconda.github.io/>
-* In short, add `bioconda` and `conda-forge` to your channels list
-* Bioconda packages are available for Linux and macOS
-
----
-
-# Getting started as contributor
-
-* Read <https://bioconda.github.io/contributor/>
-* Join the chat at <https://gitter.im/bioconda/Lobby>
-
-<img src="gitter.png" width="90%"/>
-
----
-
 # Basics for package authors
 
 - Conda packages are `.tar.bz2` or `.conda` files
 - They are created with `conda build` from a `meta.yaml` file
 - This contains the packaging instructions
 - It is also called the “recipe”
-
----
-
-# Bioconda specifics
-
-- Bioconda recipes are at<br/>
-  <https://github.com/bioconda/bioconda-recipes>
-- CI services are used for automation:
-    * Check recipes for common problems (linting)
-    * Build packages
-    * Test them
-    * Upload to Anaconda.org
-
----
-
-# Preparation
-
-- Fork and clone `bioconda-recipes`
-
-<video width="800px" autoplay muted="true" loop="true">
-<source src="fork.webm" type="video/webm">
-</video>
 
 ---
 
@@ -583,6 +546,39 @@ This should be straightforward:
 
 ---
 
+# Contributing to
+
+<img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
+
+* Read <https://bioconda.github.io/contributor/>
+* Join the chat at <https://gitter.im/bioconda/Lobby>
+
+<img src="gitter.png" width="80%"/>
+
+---
+
+# Bioconda specifics
+
+- Bioconda recipes are at<br/>
+  <https://github.com/bioconda/bioconda-recipes>
+- CI services are used for automation:
+    * Check recipes for common problems (linting)
+    * Build packages
+    * Test them
+    * Upload to Anaconda.org
+
+---
+
+# Preparation
+
+- Fork and clone `bioconda-recipes`
+
+<video width="800px" autoplay muted="true" loop="true">
+<source src="fork.webm" type="video/webm">
+</video>
+
+---
+
 # Becoming a Bioconda member
 
 - In your PR, ping @bioconda/core and tell them you’d like to become a member.
@@ -597,3 +593,22 @@ This should be straightforward:
 - Accepts various commands in PRs by writing `@BiocondaBot please ...`
 
 
+---
+
+# R Studio
+
+```bash
+mamba create -n rstudio rstudio-desktop
+conda activate rstudio
+rstudio
+```
+Install R libraries:
+```bash
+mamba install -n rstudio bioconductor-dada2 r-tidyverse
+```
+
+From within R Studio:
+```R
+>>> system("mamba install -y bioconductor-dada2 r-tidyverse")
+```
+(Don’t forget the `-y`.)
