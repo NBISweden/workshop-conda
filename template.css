@@ -4,7 +4,7 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
 
 /* Fonts */
-body,p,h1,h2,h3,h4,h5,h6 {
+body, p, h1, h2, h3, h4, h5, h6 {
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     font-size: 20px;
@@ -40,7 +40,7 @@ h3 {
 
 /* Custom colours */
 .green { color: #85be42; font-weight: bold }
-.dark-green { color: #487a2d; font-weight: bold }
+.dark-green, em { color: #487a2d; font-weight: bold }
 .blue { color: #0099c2; font-weight: bold }
 .dark-blue { color: #015491; font-weight: bold }
 .light-grey { color: #999999 }
@@ -102,7 +102,7 @@ blockquote {
 /* Link colour */
 a {
     color: #85be42;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 /* Underline links when hovering */
@@ -122,4 +122,8 @@ a:hover {
 .image-with-text {
   display: inline-block;
   vertical-align: middle;
+}
+
+ul li {
+  margin: 1ex 0ex;
 }

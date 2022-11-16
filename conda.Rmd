@@ -26,6 +26,7 @@ class: center, middle
 
 2022-11-17
 
+Slides: https://github.com/NBISweden/workshop-conda
 
 
 ```{r Setup, echo = FALSE, message = FALSE}
@@ -34,64 +35,69 @@ knitr::opts_chunk$set(message = FALSE,
                       warning = FALSE)
 
 # Load packages
-library("dplyr")
-library("kableExtra")
+# library("dplyr")
+# library("kableExtra")
 ```
 
 ---
 
-# Requested topics from the survery
+# Overview
 
-- 10 votes: Managing R and Python libraries with Conda
-- 8 votes: Working with Conda on different operating systems
-- 8 votes: Modifying and rolling back Conda environments
-- 8 votes: Writing a Conda recipe
+- Conda introduction (refresher)
 
----
+--
+- Bioconda
 
-# Plan
-
-- Short introduction describing what Conda is (refresher)
-- Using Conda
-  * channel config has changed (strict channel order)
-  * on Rackham
+--
 - Mamba
 
-- Conda support in Snakemake
+--
+- Managing environments
 
+--
+- Sharing environments
 
+--
+- Conda and workflow managers
+
+--
 - Creating recipes
-  * Set up dev environment
-  * Write new recipe based on an existing one
-  * Test it locally (in different ways)
-  * Submit PR
 
----
-
-# Misc/notes
-
-* [conda-lock](https://github.com/conda-incubator/conda-lock)
-
-* `conda debug`
-
-* conda env create, conda create
+--
+- Contributing a recipe to Bioconda
 
 
 ---
 
 # Conda: a .green[package], .green[dependency], and .green[environment] manager
 
-* Conda installs packages
-* Packages come from a central repository at https://anaconda.org/
-* Users can contribute their own packages via *channels*
-* Most important for us:
+--
+* Think `apt`, `brew`, `pip`, `yum` etc., but with focus on data science
+
+--
+* Supports Linux, macOS, Windows
+
+--
+* Packages come pre-compiled
+
+--
+* On Linux, they work on most distributions
+
+--
+* Packages are hosted centrally at [anaconda.org](https://anaconda.org/)
+
+--
+* Users can contribute their own packages via *channels* (think YouTube)
+
+--
+* Most important for us (apart from `defaults`):
   - The [conda-forge](https://conda-forge.org/) channel
   - The [Bioconda](https://bioconda.github.io/) channel
 * Both are community-driven
 
 ---
 
-# Snakes everywhere (terms)
+# Terms
 
 * .green[Conda]: The package manager
 * .green[`conda`]: The command-line program
@@ -123,15 +129,22 @@ conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 ```
-* Bioconda builds upon `conda-forge`
+
+---
+
+# Some Bioconda pitfalls
+
+* The recommended settings have changed
+  - Channel order (re-run the `conda config` commands to correct it)
+  - The `r` channel was dropped (easiest is to remove it manually from `~/.condarc`)
 
 --
+* Don’t skip the `config` step. Using `-c bioconda` sometimes works, but may fail mysteriously
+  - You *also* need `-c conda-forge` and you need them in the right order.
 
-## Pitfalls
-
-* Ensure `r` isn’t listed in your channels list in `~/.condarc`
-* Don’t just use `-c bioconda`
-
+--
+* Bioconda does not produce Windows packages (but conda-forge does)
+  - However, platform-independent packages can still be installed on Windows
 
 ---
 
@@ -144,7 +157,7 @@ conda init  # Modifies your ~/.bashrc
 conda config --set auto_activate_base false
 ```
 
-Or run `module load conda` and `source conda_init.sh` everytime you want to use
+Or run `module load conda` and `source conda_init.sh` every time you want to use
 `conda`.
 
 * Bioconda, conda-forge etc. are pre-configured.
