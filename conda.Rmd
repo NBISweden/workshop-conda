@@ -31,17 +31,14 @@ Slides: https://github.com/NBISweden/workshop-conda
 
 ```{r Setup, echo = FALSE, message = FALSE}
 # Knitr setup
-knitr::opts_chunk$set(message = FALSE,
-                      warning = FALSE)
+#knitr::opts_chunk$set(message = FALSE,
+#                      warning = FALSE)
 
-# Load packages
-# library("dplyr")
-# library("kableExtra")
 ```
 
 ---
 
-# Overview
+# Part I
 
 - Conda introduction (refresher)
 
@@ -63,9 +60,18 @@ knitr::opts_chunk$set(message = FALSE,
 --
 - Creating recipes
 
+
+--
+
+# Part II
+
+- Exercises
+
+--
+- Creating recipes step by step
+
 --
 - Contributing a recipe to Bioconda
-
 
 ---
 
@@ -134,12 +140,13 @@ conda config --set channel_priority strict
 
 # Some Bioconda pitfalls
 
-* The recommended settings have changed
+* The recommended settings have changed over the years:
+  - Strict channel priority
   - Channel order (re-run the `conda config` commands to correct it)
   - The `r` channel was dropped (easiest is to remove it manually from `~/.condarc`)
 
 --
-* Don’t skip the `config` step. Using `-c bioconda` sometimes works, but may fail mysteriously
+* *Not* configuring the channels and using `-c bioconda` sometimes works, but may fail mysteriously
   - You *also* need `-c conda-forge` and you need them in the right order.
 
 --
@@ -151,6 +158,7 @@ conda config --set channel_priority strict
 # Using Conda on Rackham and Bianca
 
 For `conda` to be permanently available, do this *once* and log in again:
+
 ```bash
 module load conda
 conda init  # Modifies your ~/.bashrc
@@ -166,63 +174,81 @@ Or run `module load conda` and `source conda_init.sh` every time you want to use
 
 ---
 
-# Highly recommended: [Mamba](https://mamba.readthedocs.io/en/latest/)
+# Conda is sometimes slow
 
-* A replacement for `conda` with a much faster dependency solver
-* Same command-line interface
-* Install from `conda-forge`:
+* Conda installs a package and all required dependencies, observing constraints on the version.
+
+    *Example:* a workflow requires `snakemake` whose most recent version requires
+    `python>=3.7`, but another tool the workflow depends on is only compatible with
+    Python 3.6, so the dependency resolver needs to find an older `snakemake` version
+    still compatible with Python 3.6.
+
+--
+* Solving which package versions satisfy all requirements is an NP-complete problem
+
+--
+* For channels with many packages (conda-forge), for packages with many dependencies,
+  dependency resolution can take *hours*
+
+---
+
+# Mamba to the rescue
+
+<img src="https://raw.githubusercontent.com/mamba-org/mamba/main/docs/assets/mamba_header.png" width="50%"/>
+
+* [Mamba](https://mamba.readthedocs.io/en/latest/) is a faster replacement for `conda`
+  - partially written in C++
+  - with a much faster dependency solver
+
+--
+* Same command-line interface as `conda` (in most cases)
+
+--
+* Install it (from `conda-forge`):
 ```bash
 conda install -n base mamba
 ```
-* Mamba is .green[already installed on Rackham]
 
 --
+* Mamba is *already installed on Rackham*
 
-## There is also
-
-* [Mambaforge](https://github.com/conda-forge/miniforge):
-  Alternative to miniconda with pre-installed Mamba and activated conda-forge
+--
+* The [conda-libmamba-solver project](https://github.com/conda/conda-libmamba-solver) is working on integrating the Mamba solver into regular Conda
 
 
 ---
 
-# Conda environments
+# Conda environment – basics
 
-Anything installed by Conda is installed into a **Conda environment**.
-
-Each Conda environment contains a set of packages.
-
-An environment named `base` exists by default.
-
-It contains `conda` itself and its dependencies, such as Python.
-
-To use the software in an environment, it needs to be **activated**.
-
-Environments are .green[independent]:
-
-- Environment *a* can have version *x* of a tool, while environment *b* has
-  the same tool in version *y*.
-- Environments
-
-
-The `base` environment is the only one that cannot easily be deleted and re-created, so keep it clean:
-It should only contain Conda and Mamba (and related)
-
+* Anything installed by Conda is put into a *Conda environment*.
 
 --
 
-* Install Samtools and BWA into a new **Conda environment** named `mapping`:
+* The default environment is called `base`
+  - It contains Conda itself (and its dependencies such as Python)
+
+--
+
+* The base environment is the only one that cannot easily be deleted and re-created, so keep it clean
+  - Avoid installing anything not Conda-related into it (only `mamba`, `conda-build` etc.)
+
+--
+
+* For anything else, create a new environment.
+
+--
+
+* Example: Create an environment mapped `mapping` and install Samtools and BWA into it:
 ```bash
-$ conda create -n mapping samtools bwa
+mamba create -n mapping samtools bwa
 ```
 
---
+---
 
-* Conda also installs all .green[dependencies] – other software required by Samtools and/or BWA.
+# Working with environments
 
---
+* To use the software in an environment, **activate** it:
 
-To use the tools in the environment, .green[activate] it:
 ```bash
 $ conda activate mapping
 $ samtools --version
@@ -234,7 +260,11 @@ samtools 1.15.1
 ```bash
 conda install -n mapping bowtie2
 ```
-(Leaving out `-n mapping` installs into the currently active environment.)
+
+* Or to install into the currently active environment:
+```bash
+conda install bowtie2
+```
 
 ---
 
@@ -244,11 +274,11 @@ conda install -n mapping bowtie2
 
 --
 
-* Environments are independent
+* Environments are independent (can have different versions of the same software)
 
 --
 
-* If something is broken, simply delete the environment and start over
+* If something is broken, simply delete the environment and start over:
 
 --
 
@@ -262,7 +292,7 @@ $ conda env remove -n mapping
 
 --
 
-* Find packages by searching [anaconda.org](https://anaconda.org) or with `conda search`
+* Find packages by searching [anaconda.org](https://anaconda.org) or with `conda search` (or `mamba search`)
 
 
 ---
@@ -271,7 +301,6 @@ $ conda env remove -n mapping
 
     conda env export --from-history | grep -v prefix: > environment.yaml
 
-    - 10 votes: Sharing Conda environments
   * environment files
   * `conda env export`
   * `conda list --export`
@@ -293,7 +322,7 @@ $ conda env remove -n mapping
 
 * Example `bwa.yaml`:
 
-```{yaml conda env one, eval = FALSE}
+```yaml
 channels:
   - conda-forge
   - bioconda
@@ -392,6 +421,26 @@ process foo {
   ...
 }
 ```
+
+---
+
+# R Studio
+
+```bash
+mamba create -n rstudio rstudio-desktop
+conda activate rstudio
+rstudio
+```
+Install R libraries:
+```bash
+mamba install -n rstudio bioconductor-dada2 r-tidyverse
+```
+
+From within R Studio:
+```R
+>>> system("mamba install -y bioconductor-dada2 r-tidyverse")
+```
+(Don’t forget the `-y`.)
 
 ---
 
@@ -604,24 +653,3 @@ This should be straightforward:
 
 - Automatically opens PRs for version bumps (of Python packages, for example)
 - Accepts various commands in PRs by writing `@BiocondaBot please ...`
-
-
----
-
-# R Studio
-
-```bash
-mamba create -n rstudio rstudio-desktop
-conda activate rstudio
-rstudio
-```
-Install R libraries:
-```bash
-mamba install -n rstudio bioconductor-dada2 r-tidyverse
-```
-
-From within R Studio:
-```R
->>> system("mamba install -y bioconductor-dada2 r-tidyverse")
-```
-(Don’t forget the `-y`.)
