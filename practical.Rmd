@@ -218,34 +218,14 @@ recipes/bioawk/
 
 # Important meta.yaml sections
 
---
 
 - `package`: name and version
-
---
-
 - `source`: url and SHA256/MD5 checksums
-
---
-
 - `build`: build number, platforms to skip, “noarch” information
-
---
-
 - `requirements`: packages for building, linking, running
-
---
-
 - `test`: commands/imports
-
---
-
 - `about`: webpage, license, summary of what the package does
-
---
-
 - `extras`: comments, maintainers, etc.
-
 
 ---
 
