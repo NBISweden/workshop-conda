@@ -518,7 +518,7 @@ chmod +x exercises/bioawk/build.sh
 Now try building the recipe with:
 
 ```{bash e1-build-recipe, eval=FALSE}
-conda build bioawk | tee bioawk.build.log
+conda build bioawk
 ```
 
 
