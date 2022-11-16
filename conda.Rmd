@@ -114,6 +114,10 @@ Slides: https://github.com/NBISweden/workshop-conda
 * .green[Bioconda]: A bioinformatics-focused channel for Conda packages
 * .green[conda-forge]: A community-driven channel for everything else
 
+???
+
+* boa, miniforge, mambaforge, micromamba, ...
+
 ---
 
 # Using Conda on your laptop
@@ -178,17 +182,20 @@ Or run `module load conda` and `source conda_init.sh` every time you want to use
 
 * Conda installs a package and all required dependencies, observing constraints on the version.
 
-    *Example:* a workflow requires `snakemake` whose most recent version requires
-    `python>=3.7`, but another tool the workflow depends on is only compatible with
-    Python 3.6, so the dependency resolver needs to find an older `snakemake` version
-    still compatible with Python 3.6.
+    *Example:*
+    - A workflow needs tools `x` and `y`.
+    - `x` requires `snakemake`
+    - Recent `snakemake` versions require `python>=3.7`
+    - Tool `y` requires `python<=3.6`
+    - → The dependency resolver needs to find an older `snakemake` version
+      still compatible with Python 3.6.
 
 --
 * Solving which package versions satisfy all requirements is an NP-complete problem
 
 --
-* For channels with many packages (conda-forge), for packages with many dependencies,
-  dependency resolution can take *hours*
+* For channels with many packages (conda-forge) and/or packages with many dependencies,
+  dependency resolution can take *hours*.
 
 ---
 
@@ -196,14 +203,14 @@ Or run `module load conda` and `source conda_init.sh` every time you want to use
 
 <img src="https://raw.githubusercontent.com/mamba-org/mamba/main/docs/assets/mamba_header.png" width="50%"/>
 
-* [Mamba](https://mamba.readthedocs.io/en/latest/) is a faster replacement for `conda`
-  - partially written in C++
-  - with a much faster dependency solver
+* [Mamba](https://mamba.readthedocs.io/en/latest/) is a (much) faster replacement for `conda`
 
 --
+
 * Same command-line interface as `conda` (in most cases)
 
 --
+
 * Install it (from `conda-forge`):
 ```bash
 conda install -n base mamba
@@ -216,126 +223,218 @@ conda install -n base mamba
 * The [conda-libmamba-solver project](https://github.com/conda/conda-libmamba-solver) is working on integrating the Mamba solver into regular Conda
 
 
+???
+
+* Mamba does not necessarily give the same results as the Conda solver
+* Sometimes it picks too old package versions, solution is to explicitly specify which minimum versions you want
+
 ---
 
 # Conda environment – basics
 
 * Anything installed by Conda is put into a *Conda environment*.
+  - A single environment contains a consistent set of packages
+    (compatible with each other)
+  - Different environments are independent of each other
 
 --
 
 * The default environment is called `base`
-  - It contains Conda itself (and its dependencies such as Python)
+  - It contains Conda itself and its dependencies such as Python
 
 --
 
 * The base environment is the only one that cannot easily be deleted and re-created, so keep it clean
-  - Avoid installing anything not Conda-related into it (only `mamba`, `conda-build` etc.)
+
+  - Best to use it only for Conda-related tools (`mamba`, `conda-build` etc.)
 
 --
 
 * For anything else, create a new environment.
 
---
-
-* Example: Create an environment mapped `mapping` and install Samtools and BWA into it:
-```bash
-mamba create -n mapping samtools bwa
-```
-
 ---
 
 # Working with environments
 
+* Example: Create an environment mapped `mapping` and install Samtools and Bowtie2 into it:
+
+  ```bash
+  mamba create -n mapping samtools bowtie2
+  ```
+
 * To use the software in an environment, **activate** it:
 
-```bash
-$ conda activate mapping
-$ samtools --version
-samtools 1.15.1
-```
-
---
-* Install a tool into an existing environment:
-```bash
-conda install -n mapping bowtie2
-```
-
-* Or to install into the currently active environment:
-```bash
-conda install bowtie2
-```
-
----
-
-# Conda environments
-
-* You can have as many environments as you wish
+  ```bash
+  $ conda activate mapping
+  $ samtools --version
+  samtools 1.15.1
+  ```
 
 --
 
-* Environments are independent (can have different versions of the same software)
+* To install a package into an existing environment:
 
---
+  ```bash
+  conda install -n mapping bwa=0.7.17
+  ```
 
-* If something is broken, simply delete the environment and start over:
+* Or to install into the currently activated environment:
 
---
+  ```bash
+  conda install bwa=0.7.17
+  ```
 
-```bash
-$ conda env remove -n mapping
-```
-
---
-
-* To test a new tool, install it into a fresh Conda environment. Delete the environment to uninstall.
+* You can use `=`, `>=`, `<=` to constrain package versions
 
 --
 
 * Find packages by searching [anaconda.org](https://anaconda.org) or with `conda search` (or `mamba search`)
 
+---
+
+# Treat Conda environments as ephemeral
+
+* To test a new tool, install it into a fresh Conda environment.
+  Then delete the environment to uninstall.
+
+  ```bash
+  conda env remove -n mapping
+  ```
+
+* To find out when the bug you’re seeing in a tool was introduced,
+  install older versions into a temporary environment
+
+* If your project’s environment got messed up, just delete it and start over.
 
 ---
 
-# Sharing environments
+# More about environments
 
-    conda env export --from-history | grep -v prefix: > environment.yaml
-
-  * environment files
-  * `conda env export`
-  * `conda list --export`
-  * `conda list --explicit`
-
-
-* Bioconda packages are available for Linux and macOS
-* conda-forge packages are also (often) available for Windows
-
-
-# Conda environment files
-
---
-* Possibly helpful: `conda export -n envname > environment.yaml`
-
-* Conda environments can be created from .green[environment files] in YAML format.
+* Environments are just directories within your Conda installation directory
+  (`~/miniconda/envs/mapping` or similar)
+  - Activating an environment adds its `bin/` directory to your `$PATH`
 
 --
 
-* Example `bwa.yaml`:
+## Environments on Rackham
 
-```yaml
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - bwa=0.7.17
-```
+* Conda uses (hard-)links to safe disk space
+* ... but these still take up inodes
+* Thus, on Rackham, preferably create environments within project directories using `-p`:
+  ```bash
+  mamba create -p /proj/snic.../nobackup/mycondaenv r-base
+  ```
+
+---
+
+# Persisting and sharing environments
+
+* **Environment files** specify how to create an environment.
+* Example `environment.yaml`:
+
+  ```yaml
+  name: bwa
+  channels:
+    - conda-forge
+    - bioconda
+    - defaults
+  dependencies:
+    - bwa=0.7.17
+  ```
 
 --
-* Create the environment:
+
+* To create the environment, run:
+
+  ```bash
+  mamba env create -f environment.yaml  # Note: "env create", not "create"
+  ```
+
+--
+
+* The YAML file can be written manually or you let Conda generate it from an existing environment:
+
+  ```bash
+  conda env export --no-builds [--from-history] > environment.yaml
+  ```
+  - `--no-builds` is recommended in the [Bioconda FAQ](http://bioconda.github.io/faqs.html#why-shouldn-t-i-include-build-numbers-in-my-environment-yamls)
+
+---
+
+# Categories of environment files
+
+* Environment files can be *abstract* or *concrete* or anything in between.
+
+--
+
+* **Abstract dependencies:** List only `pysam` and Conda will pick a suitable version
+  for it and its dependencies.
+  - Good at development time and when you develop something that needs to be
+    installable alongside other tools.
+  - Not reproducible. If a dependency is updated, your tool or workflow may produce different results.
+
+--
+
+* **Concrete dependencies:** List `pysam=0.19.1` and *all dependencies and their versions*.
+  - This is what `conda env export` creates.
+  - Reproducible.
+  - Very unflexible. Installing another tool into the environment likely leads
+    to conflicts.
+  - Probably platform-specific. You need one concrete `environment.yaml` for
+    each platform you support.
+
+---
+
+# Abstract or concrete?
+
+* For some projects, using both abstract *and* concrete makes sense:
+  - The abstract dependencies define what your software depends on
+  - The concrete dependencies (one file for each platform) are used for your tests (CI)
+  - The concrete environments are generated from the abstract one.
+
+---
+
+# More ways to create reproducible environment specifications
+
 ```bash
-$ conda env create -n bwa -f bwa.yaml
+conda list --export > environment.txt
 ```
+
+```
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+...
+bwidget=1.9.14=ha770c72_1
+bzip2=1.0.8=h7f98852_4
+...
+```
+
+--
+
+```bash
+conda list --explicit > explicit.txt
+```
+
+```
+...
+@EXPLICIT
+...
+https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2022.9.24-ha878542_0.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
+...
+```
+
+* Exactly reproduces environments (on one platform)
+* It is very fast because Conda no longer resolves dependencies
+* Recreating the environment can fail when files are removed from anaconda.org
+
+---
+
+class: center, middle
+
+.Huge[Using Conda with workflow managers]
+
 
 ---
 
@@ -343,7 +442,7 @@ $ conda env create -n bwa -f bwa.yaml
 
 ## A single environment for the entire workflow
 
-* Write an environment file (`environment.yaml`) that includes .green[all tools used by the workflow]:
+* Write an environment file (`environment.yaml`) that includes **all tools used by the workflow**:
 ```python
 name: best-practice-smk
 channels:
@@ -359,11 +458,12 @@ dependencies:
 
 --
 * Create the environment, activate it and run the workflow within it:
-```bash
-$ conda env create -f environment.yml
-$ conda activate best-practice-smk
-$ snakemake
-```
+
+  ```bash
+  conda env create -f environment.yml
+  conda activate best-practice-smk
+  snakemake
+  ```
 
 .tiny[source: [best practice example](https://github.com/NBISweden/snakemake_best_practice)]
 
@@ -442,35 +542,21 @@ From within R Studio:
 ```
 (Don’t forget the `-y`.)
 
+
 ---
 
-# Basics for users
+class: center, middle
 
-- A **channel** gives you access to extra Conda packages
-- Bioconda is a channel for bioinformatics
-- View its contents at <https://anaconda.org/bioconda>
-
-<img src="anaconda-screenshot.png" width="60%"/>
+.Huge[Writing recipes for creating Conda packages]
 
 ---
 
 # Basics for package authors
 
-- Conda packages are `.tar.bz2` or `.conda` files
-- They are created with `conda build` from a `meta.yaml` file
-- This contains the packaging instructions
-- It is also called the “recipe”
-
----
-
-# Steps for adding a recipe
-
-- Add `recipes/mypackagename/meta.yaml`
-- Open a PR (read the instructions)
-- Wait for tests to run
-- Update until all tests pass
-- Ask the BiocondaBot to add the "please review & merge" label
-- Make other requested changes
+* Conda packages are `.tar.bz2` or `.conda` files
+* They are created with `conda build` from a `meta.yaml` file
+  - It contains the packaging instructions
+  - It is also called the “recipe”
 
 ---
 
@@ -511,7 +597,6 @@ From within R Studio:
       home: https://igdiscover.se/
       license: MIT
       summary: 'Analyze antibody repertoires and discover new V genes'
-
 
 
 ---
@@ -608,9 +693,16 @@ This should be straightforward:
 
 ---
 
-# Contributing to
+class: center, middle
+
+.Huge[Contributing a recipe to Bioconda]
 
 <img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
+
+---
+
+# Contributing to
+
 
 * Read <https://bioconda.github.io/contributor/>
 * Join the chat at <https://gitter.im/bioconda/Lobby>
@@ -624,10 +716,10 @@ This should be straightforward:
 - Bioconda recipes are at<br/>
   <https://github.com/bioconda/bioconda-recipes>
 - CI services are used for automation:
-    * Check recipes for common problems (linting)
-    * Build packages
-    * Test them
-    * Upload to Anaconda.org
+    * Checking recipes for common problems (linting)
+    * Building packages
+    * Testing them
+    * Uploading to Anaconda.org
 
 ---
 
@@ -638,6 +730,19 @@ This should be straightforward:
 <video width="800px" autoplay muted="true" loop="true">
 <source src="fork.webm" type="video/webm">
 </video>
+
+---
+
+# Steps for adding a recipe
+
+- Add `recipes/mypackagename/meta.yaml` in your fork
+- Make it work locally
+- Open a PR (read the instructions)
+- Wait for tests to run
+- Update until all tests pass
+- Ask the BiocondaBot to add the "please review & merge" label
+- Make other requested changes
+- Wait for the reviews
 
 ---
 
