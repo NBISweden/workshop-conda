@@ -9,7 +9,7 @@ output:
     css: ["default", "template.css"]
     nature:
       slideNumberFormat: ""
-      #ratio: "16:12"
+      #ratio: "16:9"
 ---
 
 
@@ -50,7 +50,7 @@ between conda environments in jupyter notebooks.
 
 ## Setup
 
-```{bash setup, eval=FALSE }
+```bash
 mkdir -p exercises
 cd exercises
 ```
@@ -79,7 +79,7 @@ switch between them.
 
 List environments with `conda env list` (or `conda info --envs`):
 
-```{bash conda-envs-common-commands-list, eval=FALSE}
+```bash
 conda env list
 ```
 ````{verbatim}
@@ -99,7 +99,7 @@ lectures2             *  /home/peru/miniconda3/envs/lectures2
 
 ## Creating / removing environments
 
-```{bash conda-envs-create-remove , eval=FALSE}
+```bash
 mamba create --name=myenv python=3.8 numpy
 mamba env remove --name=myenv
 ```
@@ -108,12 +108,8 @@ mamba env remove --name=myenv
 
 Let's create an environment for `samtools`:
 
-```{bash conda-envs-create-samtools, eval=FALSE }
+```bash
 mamba create --name=samtools samtools
-```
-
-```{bash conda-envs-create-samtools-eval, echo=FALSE, cache=TRUE }
-if conda env list --json | grep samtools > /dev/null 2>&1; then echo >/dev/null ; else mamba create -y --name=samtools samtools; fi
 ```
 
 --
@@ -121,7 +117,7 @@ if conda env list --json | grep samtools > /dev/null 2>&1; then echo >/dev/null 
 ## Activating / deactivating environments
 
 
-```{bash conda-envs-activate, eval=FALSE }
+```bash
 command -v samtools
 conda activate samtools
 command -v samtools
@@ -135,7 +131,7 @@ command -v samtools
 
 ## Installing packages
 
-```{bash conda-envs-install-bioawk-samtools, eval=FALSE }
+```bash
 mamba install -n samtools bioawk
 ```
 
@@ -143,7 +139,7 @@ mamba install -n samtools bioawk
 
 ## Listing installed packages
 
-```{bash conda-envs-list-installed, eval=FALSE }
+```bash
 conda list
 conda list --explicit
 ```
@@ -155,7 +151,7 @@ create --file`
 
 ## Exporting environments
 
-```{bash conda-envs-export, eval=FALSE }
+```bash
 conda env export
 conda env export --from-history
 conda list --explicit
@@ -242,14 +238,9 @@ https://github.com/lh3/bioawk
 
 Start by creating a directory for the recipe:
 
-```{bash, eval=FALSE }
+```bash
 mkdir -p bioawk
 ```
-
-```{bash, eval=TRUE , echo=FALSE}
-mkdir -p exercises/bioawk
-```
-
 
 and open the file `bioawk/meta.yaml` in an editor. 
 
@@ -261,7 +252,7 @@ Following conda documentation<sup>1</sup>, we need to complete the
 following template:
 
 .small[
-````{verbatim, lang="YAML" }
+```yaml
 package:
   name:
   version:
@@ -283,7 +274,7 @@ test:
 
 about:
   home:
-````
+```
 ]
 
 .footnote[
@@ -308,22 +299,15 @@ Copy the tarball link [Source code
 to set the URL to download with `wget` and pipe to `sha256sum`:
 
 .small[
-```{bash e1-tarball-sha256-echo, eval=FALSE }
+```bash
 URL=https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz
 wget -O- ${URL} -o /dev/null | sha256sum
 ```
 ]
-
---
-
 .small[
-```{bash e1-tarball-sha256-eval, echo=FALSE }
-URL=https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz
-if [ ! -e exercises/bioawk.sha256sum.txt ]; then
-	wget -O- ${URL} -o /dev/null | sha256sum > exercises/bioawk.sha256sum.txt
-fi
-cat exercises/bioawk.sha256sum.txt
-```
+````{verbatim}
+5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5  -
+````
 ]
 
 --
@@ -333,7 +317,7 @@ file, along with .green[package name] and .green[version] number:
 
 
 .small[
-````{verbatim}
+```yaml
 package:
   name: bioawk
   version: "1.0"
@@ -341,31 +325,33 @@ package:
 source:
   url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
   sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
-````
+```
 ]
 ---
 
 
-# 3. Clone the repo
+# 3. Unzip the tarball
 
 Next we need to know how to compile the package and gather information
 about dependencies and requirements.
 
 --
 
-Start by cloning the repo:
+Start by downloading and unzipping the tarball:
 
-```{bash, eval=FALSE }
-git clone git@github.com:lh3/bioawk.git bioawk.git
-ls bioawk.git | head -5
+```bash
+wget -O- ${URL} | tar -zxvf -
+ls bioawk-1.0 | head -n 5
 ```
 
-```{bash list-bioawk, echo=FALSE}
-if [ ! -e exercises/bioawk.git ]; then
-	git clone git@github.com:lh3/bioawk.git exercises/bioawk.git
-fi
-ls exercises/bioawk.git | head -5
-```
+````{verbatim}
+FIXES
+Makefile
+README.awk
+README.md
+addon.c
+````
+
 --
 
 There is a README.md that hopefully provides installation
@@ -374,7 +360,7 @@ package. If we scroll through the former, we will find the following
 information:
 
 ```{bash e1-head-readme, echo=FALSE }
-head -12 exercises/bioawk.git/README.md | tail -3
+head -n 12 exercises/bioawk.git/README.md | tail -n 3
 ```
 
 --
@@ -388,8 +374,7 @@ head -12 exercises/bioawk.git/README.md | tail -3
 Add the dependencies .green[bison] and .green[libz] to the
 .green[requirements] section, .green[build] keyword:
 
-```{bash e1-write-meta-1, echo=FALSE }
-cat >exercises/bioawk/meta.yaml <<EOL
+```yaml
 package:
   name: bioawk
   version: "1.0"
@@ -402,13 +387,7 @@ requirements:
   build:
     - zlib
     - bison
-EOL
 ```
-
-```{bash e1-read-meta-no-test, eval=FALSE, code=readLines("exercises/bioawk/meta.yaml") }
-
-```
-
 
 ---
 
@@ -417,7 +396,7 @@ EOL
 Examine the Makefile and look for the .green[bioawk] target; linked
 packages are defined with the .green[-l] option:
 
-````{verbatim}
+````make
 bioawk:ytab.o $(OFILES)
 	$(CC) $(CFLAGS) ytab.o $(OFILES) $(ALLOC) -o $@ -lm -lz
 ````
@@ -431,7 +410,7 @@ should be added to the .green[build:run] section. Also, since we use
 the .green[gcc]<sup>1</sup> compiler to build, we add that too:
 
 
-````{verbatim}
+```yaml
 requirements:
   build:
 	- {{ compiler('c') }}
@@ -439,7 +418,7 @@ requirements:
 	- bison
   run:
     - zlib
-````
+```
 
 .footnote[.small[[1] https://bioconda.github.io/contributor/guidelines.html#c-c]]
 
@@ -453,8 +432,7 @@ meta.yaml file:
 
 --
 
-```{bash e1-write-meta-with-test, echo=FALSE }
-cat >exercises/bioawk/meta.yaml <<EOL
+```yaml
 package:
   name: bioawk
   version: "1.0"
@@ -474,14 +452,7 @@ requirements:
 test:
   commands:
     - echo "hello world" | bioawk '{print}'
-EOL
 ```
-
-```{bash e1-read-meta-with-test, eval=FALSE, code=readLines("exercises/bioawk/meta.yaml") }
-
-```
-
-
 
 ---
 
@@ -498,26 +469,20 @@ in the build.sh script*"
 
 --
 
-```{bash e1-write-build-file, echo=FALSE }
-cat >exercises/bioawk/build.sh <<EOL
-export CFLAGS="$CFLAGS -I\$PREFIX/include"
-export LDFLAGS="$LDFLAGS -L\$PREFIX/lib"
+```bash
+export CFLAGS="$CFLAGS -I$PREFIX/include"
+export LDFLAGS="$LDFLAGS -L$PREFIX/lib"
 
 make
-mkdir -p \$PREFIX/bin
-cp bioawk \$PREFIX/bin
-EOL
-chmod +x exercises/bioawk/build.sh
+mkdir -p $PREFIX/bin
+cp bioawk $PREFIX/bin
 ```
 
-```{bash e1-read-build-file, eval=FALSE, code=readLines("exercises/bioawk/build.sh") }
-
-```
 --
 
 Now try building the recipe with:
 
-```{bash e1-build-recipe, eval=FALSE}
+```bash
 conda build bioawk
 ```
 
@@ -538,7 +503,7 @@ conda build bioawk
 
 
 .small[
-````{verbatim}
+```yaml
 package:
   name: bioawk
   version: "1.0"
@@ -569,7 +534,7 @@ about:
   home: https://github.com/lh3/bioawk
   license: Free software license (https://github.com/lh3/bioawk/blob/master/README.awk#L1)
   summary: BWK awk modified for biological data
-````
+```
 ]
 
 .small[See https://docs.conda.io/projects/conda-build/en/stable/resources/define-metadata.html#requirements-section for distinction between .green[requirements:build] and .green[requirements:host]]
@@ -578,7 +543,7 @@ about:
 
 # Official build file
 
-````{verbatim lang="bash"}
+```bash
 #!/bin/bash
 export LIBRARY_PATH="$PREFIX/lib"
 
@@ -586,14 +551,14 @@ make CC=$CC CFLAGS="-g -Wall -O2 -I$PREFIX/include -L$PREFIX/lib"
 
 mkdir -p $PREFIX/bin
 cp bioawk $PREFIX/bin
-````
+```
 
 ---
 
 # Example 2 - cutadapt
 
 .scriptsize[
-````{verbatim}
+```yaml
 {% set version = "4.1" %}
 
 package:
@@ -640,7 +605,7 @@ extra:
   identifiers:
     - biotools:cutadapt
     - doi:10.14806/ej.17.1.200
-````
+```
 ]
 
 ???
@@ -652,7 +617,7 @@ NB: no build script - taken care of in `build:script` section
 # Example 3 - r-rblast
 
 .scriptsize[
-````{verbatim}
+```yaml
 package:
   name: r-rblast
   version: "0.99.1"
@@ -690,14 +655,14 @@ extra:
     - bgruening
     - daler
     - jdblischak
-````
+```
 ]
 
 Build script:
 .small[
-````{verbatim}
+```bash
 $R CMD INSTALL --build .
-````
+```
 ]
 
 ---
@@ -734,7 +699,7 @@ Show how to switch between conda environments in jupyter notebooks.
 
 In `base` conda environment, install the following:
 
-```{bash install-jupyter-notebook, eval=FALSE}
+```bash
 mamba install -c conda-forge notebook
 mamba install -c conda-forge nb_conda_kernels
 mamba install -c conda-forge jupyter_contrib_nbextensions
@@ -753,7 +718,7 @@ Imagine we want to run two different versions of `pyfastx` and that
 we wanted to choose between them in the notebook. Start by creating
 two environments:
 
-```{bash pyfastx-0.8.4, eval=FALSE }
+```bash
 mamba create -n pyfastx-0.8.4 pyfastx=0.8.4
 mamba create -n pyfastx-0.7.0 pyfastx=0.7.0
 ```
@@ -765,7 +730,7 @@ mamba create -n pyfastx-0.7.0 pyfastx=0.7.0
 Activate your `base` environment and install `notebook` and
 `nb_conda_kernels`:
 
-```{bash install_nb_conda_kernels, eval=FALSE }
+```bash
 mamba install -c conda-forge notebook
 mamba install -c conda-forge nb_conda_kernels
 ```
@@ -797,7 +762,7 @@ want to install jupyter_core and notebook in every single environment
 
 You need to install `ipykernel` in the environment to make it show:
 
-```{bash install-ipykernel-in-pyfastx-0.8.4 , eval=FALSE}
+```bash
 mamba install -n pyfastx-0.8.4 ipykernel
 ```
 
@@ -821,7 +786,7 @@ to keep the list tidy.
 
 Activate the `pyfastx-0.7.0` environment and install `ipykernel`.
 
-```{bash activate-pyfastx-0.7.0, eval=FALSE }
+```bash
 conda activate pyfastx-0.7.0
 mamba install ipykernel
 ```
@@ -830,7 +795,7 @@ mamba install ipykernel
 Then, a so-called *kernelspec*<sup>1</sup> can be registered with the
 following command:
 
-```{bash register-kernelspec, eval=FALSE }
+```bash
 ipython kernel install --user --name=pyfastx-0.7.0 --display-name=pyfastx-0.7.0
 ```
 
@@ -844,7 +809,7 @@ ipython kernel install --user --name=pyfastx-0.7.0 --display-name=pyfastx-0.7.0
 
 You can list installed kernelspecs with 
 
-```{bash list-kernelspecs, eval=FALSE}
+```bash
 jupyter kernelspec list | grep pyfastx
 ```
 
@@ -857,7 +822,7 @@ environment and see if `pyfastx-0.7.0` is found in the list.
 
 You can deregister a kernelspec as follows:
 
-```{bash deregister-kernelspec, eval=FALSE }
+```bash
 jupyter kernelspec remove pyfastx-0.7.0
 ```
 
