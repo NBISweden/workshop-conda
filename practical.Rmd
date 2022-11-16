@@ -176,9 +176,9 @@ class: center, middle
 
 ## Objective
 
-Go through steps needed to write a bioconda recipe for a tool you
+Go through steps needed to write a Bioconda recipe for a tool you
 would like to add. We will be working with tools that are available on
-bioconda so there is a "solution" for comparison.
+Bioconda so there is a "solution" for comparison.
 
 --
 
@@ -467,7 +467,7 @@ requirements:
 
 # Adding a test
 
-For bioconda recipes, "*an adequate test must be included in the
+For Bioconda recipes, "*an adequate test must be included in the
 recipe*" (this is good advice anyway). This would give the following
 meta.yaml file:
 
