@@ -57,6 +57,15 @@ cd exercises
 
 ---
 
+
+class: center, middle
+
+.HUGE[Conda environments]
+
+
+
+---
+
 # Conda environments - common commands
 
 ## Objective
@@ -68,15 +77,18 @@ switch between them.
 
 ## Listing environments
 
-List environments with `conda info --envs` (or `conda env list`):
+List environments with `conda env list` (or `conda info --envs`):
 
 ```{bash conda-envs-common-commands-list, eval=FALSE}
-conda info --envs
+conda env list
 ```
-
-```{bash conda-envs-common-commands-list-eval, echo=FALSE, cache=TRUE}
-conda info --envs | grep "#\|base\|lectures"
-```
+````{verbatim}
+# conda environments:
+#
+base                     /home/peru/miniconda3
+lectures                 /home/peru/miniconda3/envs/lectures
+lectures2             *  /home/peru/miniconda3/envs/lectures2
+````
 
 - `base` is the starting environment
 - the `*` indicates the active environment
@@ -127,12 +139,19 @@ command -v samtools
 mamba install -n samtools bioawk
 ```
 
+--
+
 ## Listing installed packages
 
 ```{bash conda-envs-list-installed, eval=FALSE }
 conda list
 conda list --explicit
 ```
+
+`--explicit` lists package with URL that can then be used with `conda
+create --file`
+
+--
 
 ## Exporting environments
 
@@ -142,12 +161,14 @@ conda env export --from-history
 conda list --explicit
 ```
 
+`--from-history` builds environment spec from explicit specs
+(excluding dependencies) in history
 
 ---
 
-# Creating environments
+class: center, middle
 
-FIXME: add practical for creating environments?
+.HUGE[Writing conda recipes]
 
 ---
 
@@ -424,10 +445,10 @@ bioawk:ytab.o $(OFILES)
 --
 
 No obvious additional dependencies (.green[-lm] links the math library
-that should be available, .green[-lz] links .green[zlib]). However,
-.green[zlib] is used at runtime to process gzipped files so should be
-added to the .green[build:run] section. Also, since we use the
-.green[gcc]<sup>1</sup> compiler to build, we add that too:
+that should be available by default, .green[-lz] links .green[zlib]).
+However, .green[zlib] is used at runtime to process gzipped files so
+should be added to the .green[build:run] section. Also, since we use
+the .green[gcc]<sup>1</sup> compiler to build, we add that too:
 
 
 ````{verbatim}
@@ -446,8 +467,8 @@ requirements:
 
 # Adding a test
 
-For bioconda recipes, "an adequate test must be included in the
-recipe" (this is good advice anyway). This would give the following
+For bioconda recipes, "*an adequate test must be included in the
+recipe*" (this is good advice anyway). This would give the following
 meta.yaml file:
 
 --
@@ -570,6 +591,8 @@ about:
   summary: BWK awk modified for biological data
 ````
 ]
+
+.small[See https://docs.conda.io/projects/conda-build/en/stable/resources/define-metadata.html#requirements-section for distinction between .green[requirements:build] and .green[requirements:host]]
 
 ---
 
@@ -712,6 +735,13 @@ https://bioconda.github.io/contributor/guidelines.html
 https://docs.conda.io/projects/conda-build/en/stable/resources/define-metadata.html
 
 ---
+
+class: center, middle
+
+.HUGE[Conda and notebooks]
+
+---
+
 
 # Using conda in notebooks
 
