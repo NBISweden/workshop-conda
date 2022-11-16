@@ -766,8 +766,8 @@ Activate your `base` environment and install `notebook` and
 `nb_conda_kernels`:
 
 ```{bash install_nb_conda_kernels, eval=FALSE }
-conda install -c conda-forge notebook
-conda install -c conda-forge nb_conda_kernels
+mamba install -c conda-forge notebook
+mamba install -c conda-forge nb_conda_kernels
 ```
 
 Fire up `jupyter-notebook` and list the available kernels in the `New`
