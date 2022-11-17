@@ -1,7 +1,6 @@
 ---
-title: "Using Conda and contributing recipes"
-subtitle: "Subtitle"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+title: "Managing packages with Conda"
+date: "2022-11-17"
 output:
     xaringan::moon_reader:
         self-contained: true
@@ -124,13 +123,13 @@ Slides: https://github.com/NBISweden/workshop-conda
 
 * Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and install it:
 
-```bash
-$ curl -sO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-$ bash Miniconda3-latest-Linux-x86_64.sh
+  ```bash
+  $ curl -sO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  $ bash Miniconda3-latest-Linux-x86_64.sh
 
-Welcome to Miniconda3 py39_4.12.0
-[...]
-```
+  Welcome to Miniconda3 py39_4.12.0
+  [...]
+  ```
 
 * Set up the [Bioconda](https://bioconda.github.io/) channel:
 ```bash
@@ -161,20 +160,28 @@ conda config --set channel_priority strict
 
 # Using Conda on Rackham and Bianca
 
-For `conda` to be permanently available, do this *once* and log in again:
+The official way is to run this every time you want to use `conda`:
+```bash
+module load conda
+source conda_init.sh
+```
 
+--
+
+The convenient way is to run this *once* and log in again:
 ```bash
 module load conda
 conda init  # Modifies your ~/.bashrc
 conda config --set auto_activate_base false
 ```
+* Then `conda` is permanently available (in your `$PATH`)
 
-Or run `module load conda` and `source conda_init.sh` every time you want to use
-`conda`.
+--
 
 * Bioconda, conda-forge etc. are pre-configured.
 * They point to *local mirrors*
 * This works even on Bianca
+
 
 ---
 
@@ -547,57 +554,62 @@ From within R Studio:
 
 class: center, middle
 
-.Huge[Writing recipes for creating Conda packages]
+.Huge[Creating Conda packages]
 
 ---
 
-# Basics for package authors
+# `conda build` builds Conda packages
 
-* Conda packages are `.tar.bz2` or `.conda` files
-* They are created with `conda build` from a `meta.yaml` file
-  - It contains the packaging instructions
-  - It is also called the “recipe”
+* Get it with `mamba install -n base conda-build`
+--
+
+* Input is a directory with a file named `meta.yaml`
+--
+
+* This is called the *recipe*. It contains:
+  - Metadata
+  - Build instructions
+  - Lists of dependencies
+--
+
+* Other files are sometimes necessary:
+  - Patches
+  - Build scripts
+  - Test data
+--
+
+* The produced artifact is a `.tar.bz2` or `.conda` file with a specific structure
+  - This is what is uploaded to anaconda.org and installed by `conda install`
 
 ---
 
-# Recipes
+# Example recipe
 
-- The recipe `meta.yaml` is in YAML format
-- It contains metadata, installation instructions and lists of dependencies
-- To create your own, start with an existing one
-- Other files are sometimes necessary:
-    * Patches
-    * Build scripts
-    * Test data
-
----
-
-# Example
-
-    package:
-      name: igdiscover
-      version: 0.12
-    source:
-      url: https://pypi.io/<shortened>/igdiscover-0.12.tar.gz
-      sha256: dc0d139a5da<shortened>020eaa92121f7c36
-    build:
-      number: 0
-      script: python -m pip install --no-deps --ignore-installed .
-    requirements:
-      host:
-        - python >=3.6
-        - pip
-      run:
-        - python >=3.6
-        - igblast 1.10
-    test:
-      commands:
-        - igdiscover --help
-    about:
-      home: https://igdiscover.se/
-      license: MIT
-      summary: 'Analyze antibody repertoires and discover new V genes'
-
+```yaml
+package:
+  name: igdiscover
+  version: "0.12"
+source:
+  url: https://pypi.io/.../igdiscover-0.12.tar.gz
+  sha256: dc0d139a5da...020eaa92121f7c36
+build:
+  number: 0
+  script: python -m pip install --no-deps --ignore-installed .
+requirements:
+  host:
+    - python >=3.7
+    - pip
+  run:
+    - python >=3.7
+    - igblast 1.10
+test:
+  commands:
+    - igdiscover --help
+about:
+  home: https://igdiscover.se/
+  license: MIT
+  summary: "Analyze antibody repertoires and discover new V genes"
+```
 
 ---
 
@@ -605,13 +617,14 @@ class: center, middle
 
 ... defines the package’s name and version:
 
+```yaml
+{% set name = "igdiscover" %}
+{% set version = "0.12.2" %}
 
-    {% set name = "igdiscover" %}
-    {% set version = "0.12.2" %}
-
-    package:
-      name: "{{ name|lower }}"
-      version: "{{ version }}"
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+```
 
 * Recipes are actually Jinja2 templates
 * Jinja2 allows to set and use variables
@@ -622,11 +635,12 @@ class: center, middle
 
 ... tells Conda which files to download
 
-    source:
-      url: https://pypi.io/packages/source/i/igdiscover/igdiscover-{{ version }}.tar.gz
-      sha256: dc0d139a5da7e672dff1dae7a1d64fcdf7a0a7379e5bca61020eaa92121f7c36
-
-* Download the package once manually, then use `sha256sum` to compute its SHA256 checksum
+```yaml
+source:
+  url: https://pypi.io/packages/source/i/igdiscover/igdiscover-{{ version }}.tar.gz
+  sha256: dc0d139a5da7e672dff1dae7a1d64fcdf7a0a7379e5bca61020eaa92121f7c36
+```
+<!-- * Download the package once manually, then use `sha256sum` to compute its SHA256 checksum -->
 * The checksum ensures that the files are ok
 * Conda unpacks the source automatically during the build
 
@@ -634,10 +648,11 @@ class: center, middle
 
 # The build section
 
-    build:
-      number: 0
-      script: python -m pip install --no-deps --ignore-installed .
-
+```yaml
+build:
+  number: 0
+  script: "python -m pip install --no-deps --ignore-installed ."
+```
 * `script` describes what one would run to install the package
 * If possible, copy this from another recipe
 * Put more complicated build scripts in a `build.sh` file instead
@@ -650,17 +665,18 @@ class: center, middle
 
 ... lists the dependencies
 
-    requirements:
-      host:
-        - python >=3.6
-        - pip
-      run:
-        - python >=3.6
-        - igblast 1.10
-
+```yaml
+requirements:
+  host:
+    - python >=3.7
+    - pip
+  run:
+    - python >=3.7
+    - igblast 1.10
+```
 * `build`: Build tools (e.g. Autotools, CMake)
 * `host`: Target-specific dependencies (shared libraries, Python)
-* `run`: Runtime dependencies (installed on user’s system along with package)
+* `run`: Runtime dependencies (installed on target system along with package)
 
 ---
 
@@ -668,10 +684,11 @@ class: center, middle
 
 ... describes how to test the package after it has been built
 
-    test:
-      commands:
-        - igdiscover --help
-
+```yaml
+test:
+  commands:
+    - igdiscover --help
+```
 * This is usually just a “smoke test”:
   Running the tool with `--version` or `--help` to ensure it does not crash
 * To run the tests, Conda creates a fresh environment and installs the
@@ -683,49 +700,71 @@ class: center, middle
 
 This should be straightforward:
 
-    about:
-      home: https://igdiscover.se/
-      license: MIT
-      summary: 'Analyze antibody repertoires'
-      description: |
-        Longer description of the package, maybe
-        across multiple lines.
+```yaml
+about:
+  home: https://igdiscover.se/
+  license: MIT
+  summary: 'Analyze antibody repertoires'
+  description: |
+    Longer description of the package, maybe
+    across multiple lines.
+```
 
 ---
 
 class: center, middle
 
-.Huge[Contributing a recipe to Bioconda]
+.Huge[Contributing a recipe to]
 
-<img src="https://bioconda.github.io/_images/bioconda.png" width="80%" />
+<img src="https://bioconda.github.io/_images/bioconda.png" width="60%" />
 
 ---
 
-# Contributing to
-
+# Getting started
 
 * Read <https://bioconda.github.io/contributor/>
-* Join the chat at <https://gitter.im/bioconda/Lobby>
+* If you get stuck, use the chat at <https://gitter.im/bioconda/Lobby>
 
-<img src="gitter.png" width="80%"/>
+<img src="gitter.png" width="60%"/>
 
 ---
 
-# Bioconda specifics
+# Why Bioconda at all?
 
-- Bioconda recipes are at<br/>
-  <https://github.com/bioconda/bioconda-recipes>
-- CI services are used for automation:
-    * Checking recipes for common problems (linting)
-    * Building packages
-    * Testing them
-    * Uploading to Anaconda.org
+* Packages created with `conda build` don’t necessarily run on other machines
+  - Linux binaries are not compatible with older distributions (→glibc)
+  - Missing dependencies
+
+--
+
+* Bioconda runs `conda build` in a Docker container to ensure compatibility
+  - The container is on purpose based on an old Linux distribution
+  - The container is minimal → missing dependencies lead to an error
+
+---
+
+# Bioconda makes publishing Conda packages (relatively) easy
+
+* Recipes are checked for common problems (linting)
+--
+
+* Packages are built and tested in separate containers
+  - On Linux and macOS
+--
+
+* On success, they are uploaded to Anaconda.org
+--
+
+* Docker images are uploaded to [biocontainers.pro](https://biocontainers.pro/)
+--
+
+* The BiocondaBot automatically opens PRs if a tool for which a recipe exists was updated
 
 ---
 
 # Preparation
 
-- Fork and clone `bioconda-recipes`
+- Fork and clone the [bioconda-recipes repository](https://github.com/bioconda/bioconda-recipes)
 
 <video width="800px" autoplay muted="true" loop="true">
 <source src="fork.webm" type="video/webm">
@@ -735,14 +774,14 @@ class: center, middle
 
 # Steps for adding a recipe
 
-- Add `recipes/mypackagename/meta.yaml` in your fork
-- Make it work locally
-- Open a PR (read the instructions)
-- Wait for tests to run
-- Update until all tests pass
-- Ask the BiocondaBot to add the "please review & merge" label
-- Make other requested changes
-- Wait for the reviews
+* Add `recipes/mypackagename/meta.yaml` in your fork
+* Make it work locally
+* Push and open a PR (read the instructions)
+* Wait for tests to run
+* Update until all tests pass
+* Ask the BiocondaBot to add the "please review & merge" label
+* Make other requested changes
+* Wait for the reviews
 
 ---
 
@@ -752,9 +791,3 @@ class: center, middle
 - As a member, you can open branches in the original repo and don’t have to work
   in a fork (remember to delete your fork).
 
----
-
-# The Bioconda bot
-
-- Automatically opens PRs for version bumps (of Python packages, for example)
-- Accepts various commands in PRs by writing `@BiocondaBot please ...`
