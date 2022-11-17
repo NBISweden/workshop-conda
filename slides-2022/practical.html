@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Writing conda recipes</title>
+    <meta charset="utf-8" />
+    <script src="practical_files/header-attrs-2.17/header-attrs.js"></script>
+    <link href="practical_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="template.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+layout: true
+&lt;div class="scilife-logo"&gt;&lt;/div&gt;
+&lt;div class="nbis-logo"&gt;&lt;/div&gt;
+
+---
+
+class: center, middle
+
+.HUGE[Using conda]
+
+.Large[Practical session]
+
+.Large[Per Unneberg]
+
+.Large[2022-11-17]
+
+
+
+---
+
+# Exercises
+
+## Objective 
+
+Show basic conda usage, how to write a conda recipe and how to switch
+between conda environments in jupyter notebooks.
+
+## Setup
+
+```bash
+mkdir -p exercises
+cd exercises
+```
+
+---
+
+
+class: center, middle
+
+.HUGE[Conda environments]
+
+
+
+---
+
+# Conda environments - common commands
+
+## Objective
+
+Show basic conda commands, how to create environments, and how to
+switch between them.
+
+--
+
+## Listing environments
+
+List environments with `conda env list` (or `conda info --envs`):
+
+```bash
+conda env list
+```
+
+```default
+# conda environments:
+#
+base                     /home/peru/miniconda3
+lectures                 /home/peru/miniconda3/envs/lectures
+lectures2             *  /home/peru/miniconda3/envs/lectures2
+```
+
+- `base` is the starting environment
+- the `*` indicates the active environment
+
+---
+
+# Conda environments - common commands
+
+## Creating / removing environments
+
+```bash
+mamba create --name=myenv python=3.8 numpy
+mamba env remove --name=myenv
+```
+
+--
+
+Let's create an environment for `samtools`:
+
+```bash
+mamba create --name=samtools samtools
+```
+
+--
+
+## Activating / deactivating environments
+
+
+```bash
+command -v samtools
+conda activate samtools
+command -v samtools
+conda deactivate
+command -v samtools
+```
+
+---
+
+# Conda environments - common commands
+
+## Installing packages
+
+```bash
+mamba install -n samtools bioawk
+```
+
+--
+
+## Listing installed packages
+
+```bash
+conda list
+conda list --explicit
+```
+
+`--explicit` lists package with URL that can then be used with `conda
+create --file`
+
+--
+
+## Exporting environments
+
+```bash
+conda env export
+conda env export --from-history
+conda list --explicit
+```
+
+`--from-history` builds environment spec from explicit specs
+(excluding dependencies) in history
+
+---
+
+class: center, middle
+
+.HUGE[Writing conda recipes]
+
+---
+
+# Writing Conda recipes
+
+## Objective
+
+Go through steps needed to write a Bioconda recipe for a tool you
+would like to add. We will be working with tools that are available on
+Bioconda so there is a "solution" for comparison.
+
+--
+
+## Bioconda packages&lt;sup&gt;1&lt;/sup&gt;
+
+.small[
+
+```default
+$ tree -A recipes/bioawk
+recipes/bioawk/
+├── build.sh
+└── meta.yaml
+```
+]
+
+--
+
+- `meta.yaml` is required
+--
+
+- optional:
+--
+
+  - `build.sh`
+--
+
+  - (small) test files
+--
+
+  - license file
+
+
+.footnote[
+.small[[1] cf https://bioconda.github.io/tutorials/gcb2020.html]]
+
+
+---
+
+# Important meta.yaml sections
+
+
+- `package`: name and version
+- `source`: url and SHA256/MD5 checksums
+- `build`: build number, platforms to skip, “noarch” information
+- `requirements`: packages for building, linking, running
+- `test`: commands/imports
+- `about`: webpage, license, summary of what the package does
+- `extras`: comments, maintainers, etc.
+
+---
+
+# Example 1 - bioawk
+
+## Objective
+
+Write recipe for bioawk whose source code is found at
+https://github.com/lh3/bioawk
+
+--
+
+## Setup
+
+Start by creating a directory for the recipe:
+
+```bash
+mkdir -p bioawk
+```
+
+and open the file `bioawk/meta.yaml` in an editor. 
+
+---
+
+# 1. Edit the meta file
+
+Following conda documentation&lt;sup&gt;1&lt;/sup&gt;, we need to complete the
+following template:
+
+.small[
+```yaml
+package:
+  name:
+  version:
+
+source:
+  url:
+  sha256:
+
+requirements:
+  build:
+	-
+
+  run:
+	-
+
+test:
+  commands:
+	-
+
+about:
+  home:
+```
+]
+
+.footnote[
+.small[[1] https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/build-pkgs.html#editing-the-meta-yaml-file]]
+
+---
+
+# 2. Get tarball metadata
+
+The conda package will be built from a tarball that we download from
+the repo. We need to provide the recipe with a .green[url] and a
+.green[sha256] checksum.
+
+Click on the releases link to the right on the repo home page. This
+should bring you to
+[https://github.com/lh3/bioawk/releases](https://github.com/lh3/bioawk/releases)
+
+--
+
+Copy the tarball link [Source code
+(tar.gz)](https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz)
+to set the URL to download with `wget` and pipe to `sha256sum`:
+
+.small[
+```bash
+URL=https://github.com/lh3/bioawk/archive/refs/tags/v1.0.tar.gz
+wget -O- ${URL} -o /dev/null | sha256sum
+```
+]
+.small[
+
+```default
+5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5  -
+```
+]
+
+--
+
+Now we can add this to the .green[source] section in the meta.yaml
+file, along with .green[package name] and .green[version] number:
+
+
+.small[
+```yaml
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+```
+]
+---
+
+
+# 3. Unzip the tarball
+
+Next we need to know how to compile the package and gather information
+about dependencies and requirements.
+
+--
+
+Start by downloading and unzipping the tarball:
+
+```bash
+wget -O- ${URL} | tar -zxvf -
+ls bioawk-1.0 | head -n 5
+```
+
+
+```default
+FIXES
+Makefile
+README.awk
+README.md
+addon.c
+```
+
+--
+
+There is a README.md that hopefully provides installation
+instructions, and a Makefile that contains instructions to compile the
+package. If we scroll through the former, we will find the following
+information:
+
+
+```
+## The original awk requires a YACC-compatible parser generator (e.g. Byacc or
+## Bison). Bioawk further depends on [zlib][zlib] so as to work with gzip'd files.
+```
+
+--
+
+.green[bison] and .green[libz] are two dependencies.
+
+---
+
+# Add dependencies
+
+Add the dependencies .green[bison] and .green[libz] to the
+.green[requirements] section, .green[build] keyword:
+
+```yaml
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+
+requirements:
+  build:
+    - zlib
+    - bison
+```
+
+---
+
+# 4. Inspect build instructions
+
+Examine the Makefile and look for the .green[bioawk] target; linked
+packages are defined with the .green[-l] option:
+
+````make
+bioawk:ytab.o $(OFILES)
+	$(CC) $(CFLAGS) ytab.o $(OFILES) $(ALLOC) -o $@ -lm -lz
+````
+
+--
+
+No obvious additional dependencies (.green[-lm] links the math library
+that should be available by default, .green[-lz] links .green[zlib]).
+However, .green[zlib] is used at runtime to process gzipped files so
+should be added to the .green[build:run] section. Also, since we use
+the .green[gcc]&lt;sup&gt;1&lt;/sup&gt; compiler to build, we add that too:
+
+
+```yaml
+requirements:
+  build:
+	- {{ compiler('c') }}
+	- zlib
+	- bison
+  run:
+    - zlib
+```
+
+.footnote[.small[[1] https://bioconda.github.io/contributor/guidelines.html#c-c]]
+
+---
+
+# Adding a test
+
+For Bioconda recipes, "*an adequate test must be included in the
+recipe*" (this is good advice anyway). This would give the following
+meta.yaml file:
+
+--
+
+```yaml
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - zlib
+    - bison
+  run:
+    - zlib
+
+test:
+  commands:
+    - echo "hello world" | bioawk '{print}'
+```
+
+---
+
+# Build file
+
+Finally we need to write a build file `bioawk/build.sh`. From the
+conda documentation&lt;sup&gt;1&lt;/sup&gt;, "*anything that your build script
+copies into the $PREFIX or %PREFIX% folder will be included in your
+output package*".
+
+Unfortunately I chose a difficult package in the sense that it depends
+on zlib&lt;sup&gt;2&lt;/sup&gt;: "*the location of zlib often has to be specified
+in the build.sh script*"
+
+--
+
+```bash
+export CFLAGS="$CFLAGS -I$PREFIX/include"
+export LDFLAGS="$LDFLAGS -L$PREFIX/lib"
+
+make
+mkdir -p $PREFIX/bin
+cp bioawk $PREFIX/bin
+```
+
+--
+
+Now try building the recipe with:
+
+```bash
+conda build bioawk
+```
+
+
+.footnote[
+
+.small[[1] https://docs.conda.io/projects/conda-build/en/stable/resources/build-scripts.html]
+
+.small[[2] https://bioconda.github.io/contributor/troubleshooting.html#zlib-errors]
+
+]
+
+
+
+---
+
+# Official recipe - how did we do?
+
+
+.small[
+```yaml
+package:
+  name: bioawk
+  version: "1.0"
+
+source:
+  url: https://github.com/lh3/bioawk/archive/v1.0.tar.gz
+  sha256: 5cbef3f39b085daba45510ff450afcf943cfdfdd483a546c8a509d3075ff51b5
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - make
+    - {{ compiler('c') }}
+  host:
+    - zlib
+    - bison
+    - m4
+  run:
+    - zlib
+
+test:
+  commands:
+    - echo "hw" | bioawk '{print}'
+
+about:
+  home: https://github.com/lh3/bioawk
+  license: Free software license (https://github.com/lh3/bioawk/blob/master/README.awk#L1)
+  summary: BWK awk modified for biological data
+```
+]
+
+.small[See https://docs.conda.io/projects/conda-build/en/stable/resources/define-metadata.html#requirements-section for distinction between .green[requirements:build] and .green[requirements:host]]
+
+---
+
+# Official build file
+
+```bash
+#!/bin/bash
+export LIBRARY_PATH="$PREFIX/lib"
+
+make CC=$CC CFLAGS="-g -Wall -O2 -I$PREFIX/include -L$PREFIX/lib"
+
+mkdir -p $PREFIX/bin
+cp bioawk $PREFIX/bin
+```
+
+---
+
+# Example 2 - cutadapt
+
+.scriptsize[
+```yaml
+{% set version = "4.1" %}
+
+package:
+  name: cutadapt
+  version: {{ version }}
+
+source:
+  url: https://files.pythonhosted.org/packages/a3/30/4a889a6916d7480c153774777e634b89865f95cb02f2c3209762c7ef984b/cutadapt-4.1.tar.gz
+  sha256: be745ff24adfb4a3eaf715dfad0e2ccdfad7792ef00c1122adf4fbf3aed9227b
+
+build:
+  number: 1
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  skip: True  # [py27 or py36]
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+  host:
+    - pip
+    - python
+    - cython
+    - setuptools-scm
+  run:
+    - python
+    - xopen &gt;=1.2.0
+    - dnaio &gt;=0.7.0
+    - dataclasses &gt;=0.7  # [py36]
+
+test:
+  imports:
+    - cutadapt
+  commands:
+    - cutadapt --version
+
+about:
+  home: https://cutadapt.readthedocs.io/
+  license: MIT
+  summary: Trim adapters from high-throughput sequencing reads
+
+extra:
+  recipe-maintainers:
+    - marcelm
+  identifiers:
+    - biotools:cutadapt
+    - doi:10.14806/ej.17.1.200
+```
+]
+
+???
+
+NB: no build script - taken care of in `build:script` section
+
+---
+
+# Example 3 - r-rblast
+
+.scriptsize[
+```yaml
+package:
+  name: r-rblast
+  version: "0.99.1"
+source:
+  url:
+    - https://github.com/mhahsler/rBLAST/archive/5cbc5039705e45c83d88c324c4f2a64dfc63e4e1.tar.gz
+  md5: 5773ffb34b208af1d7999518c645728a
+build:
+  number: 6
+  rpaths:
+    - lib/R/lib/
+    - lib/
+requirements:
+  host:
+    - r-base
+    - bioconductor-biostrings
+  run:
+    - r-base
+    - bioconductor-biostrings
+    - blast
+test:
+  commands:
+    - $R -e "library('rBLAST')" # [not win]
+    - "\"%R%\" -e \"library('rBLAST')\"" # [win]
+about:
+  home: https://github.com/mhahsler/rBLAST
+  license: GPL3
+  summary: 'Seamlessly interfaces the Basic Local Alignment Search Tool (BLAST) to search genetic sequence data bases. This work was partially supported by grant no. R21HG005912 from the National Human Genome Research Institute.'
+extra:
+  recipe-maintainers:
+    - MathiasHaudgaard
+    - FrodePedersen
+    - ArneKr
+    - johanneskoester
+    - bgruening
+    - daler
+    - jdblischak
+```
+]
+
+Build script:
+.small[
+```bash
+$R CMD INSTALL --build .
+```
+]
+
+---
+
+# Bioconda resources - summary and resources
+
+## Bioconda guidelines for recipes
+
+https://bioconda.github.io/contributor/guidelines.html
+
+## Conda documentation
+
+### Metadata
+
+https://docs.conda.io/projects/conda-build/en/stable/resources/define-metadata.html
+
+---
+
+class: center, middle
+
+.HUGE[Conda and notebooks]
+
+---
+
+
+# Using conda in notebooks
+
+## Objective
+
+Show how to switch between conda environments in jupyter notebooks.
+
+--
+
+
+In `base` conda environment, install the following:
+
+```bash
+mamba install -c conda-forge notebook
+mamba install -c conda-forge nb_conda_kernels
+mamba install -c conda-forge jupyter_contrib_nbextensions
+```
+
+This enables running `jupyter-notebook` from the base environment and
+switch between conda environments in the notebook.
+
+--
+
+Why bother?
+
+--
+
+Imagine we want to run two different versions of `pyfastx` and that
+we wanted to choose between them in the notebook. Start by creating
+two environments:
+
+```bash
+mamba create -n pyfastx-0.8.4 pyfastx=0.8.4
+mamba create -n pyfastx-0.7.0 pyfastx=0.7.0
+```
+
+---
+
+# 1. Show conda environments in notebook with nb_conda_kernels
+
+Activate your `base` environment and install `notebook` and
+`nb_conda_kernels`:
+
+```bash
+mamba install -c conda-forge notebook
+mamba install -c conda-forge nb_conda_kernels
+```
+
+Fire up `jupyter-notebook` and list the available kernels in the `New`
+dropdown list.
+
+--
+
+You should not be able to see `pyfastx-0.8.4` or `pyfastx-0.7.0`.
+
+???
+
+The following url shows how to setup jupyter notebook so that one can
+switch conda environments in the notebook:
+
+https://towardsdatascience.com/how-to-set-up-anaconda-and-jupyter-notebook-the-right-way-de3b7623ea4a
+
+The following post shows two ways of setting up conda and notebooks:
+
+https://stackoverflow.com/questions/58068818/how-to-use-jupyter-notebooks-in-a-conda-environment
+
+Either 1. run jupyter server and kernel inside environment or 2.
+create a kernel *from the environment*, if one for some reason doesn't
+want to install jupyter_core and notebook in every single environment
+(e.g. only having it in base environment)
+
+--
+
+You need to install `ipykernel` in the environment to make it show:
+
+```bash
+mamba install -n pyfastx-0.8.4 ipykernel
+```
+
+Restart the `jupyter-notebook` session and list the available kernels
+again.
+
+--
+
+Now `pyfastx-0.8.4` should be visible among the options.
+
+---
+
+# 2. Add a jupyter kernel by registering a conda environment
+
+The alternative to listing a conda environment is to create a jupyter
+kernel by registering the environment. The benefit could be that it is
+easy to **register** and **deregister** environment kernels in order
+to keep the list tidy.
+
+--
+
+Activate the `pyfastx-0.7.0` environment and install `ipykernel`.
+
+```bash
+conda activate pyfastx-0.7.0
+mamba install ipykernel
+```
+
+
+Then, a so-called *kernelspec*&lt;sup&gt;1&lt;/sup&gt; can be registered with the
+following command:
+
+```bash
+ipython kernel install --user --name=pyfastx-0.7.0 --display-name=pyfastx-0.7.0
+```
+
+
+
+.footnote[.small[ [1] https://jupyter-client.readthedocs.io/en/latest/kernels.html#kernel-specs]]
+
+---
+
+# 2. Add a jupyter kernel by registering a conda environment
+
+You can list installed kernelspecs with 
+
+```bash
+jupyter kernelspec list | grep pyfastx
+```
+
+--
+
+Deactivate the environment, relaunch `jupyter-notebook` from base
+environment and see if `pyfastx-0.7.0` is found in the list.
+
+--
+
+You can deregister a kernelspec as follows:
+
+```bash
+jupyter kernelspec remove pyfastx-0.7.0
+```
+
+---
+
+# Using kernels in quarto notebooks
+
+On a final note, you can also use jupyter kernels in quarto notebooks
+(cf https://quarto.org/docs/guide/) as defined in the yaml header:
+
+.small[
+
+````default
+---
+title: "matplotlib demo"
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+For a demonstration of a line plot on a polar axis, see @fig-polar.
+
+```{python}
+#| label: fig-polar
+#| fig-cap: "A line plot on a polar axis"
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+r = np.arange(0, 2, 0.01)
+theta = 2 * np.pi * r
+fig, ax = plt.subplots(
+  subplot_kw = {'projection': 'polar'} 
+)
+ax.plot(theta, r)
+ax.set_rticks([0.5, 1, 1.5, 2])
+ax.grid(True)
+plt.show()
+```
+````
+]
+
+
+
+---
+
+
+# Summary
+
+- we have used conda to create isolated software environments
+- we have looked at the basics of creating conda recipes
+- we have seen how to switch between conda environments in jupyter
+  notebooks
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": ""
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

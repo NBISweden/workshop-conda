@@ -1,19 +1,20 @@
----
-title: "Managing packages with Conda"
-date: "2022-11-17"
-output:
-    xaringan::moon_reader:
-        self-contained: true
-        seal: false
-        css: ["default", "template.css"]
-        nature:
-            slideNumberFormat: ""
-            ratio: "16:9"
----
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Managing packages with Conda</title>
+    <meta charset="utf-8" />
+    <meta name="date" content="2022-11-17" />
+    <script src="conda_files/header-attrs-2.17/header-attrs.js"></script>
+    <link href="conda_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="template.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
 
 layout: true
-<div class="scilife-logo"></div>
-<div class="nbis-logo"></div>
+&lt;div class="scilife-logo"&gt;&lt;/div&gt;
+&lt;div class="nbis-logo"&gt;&lt;/div&gt;
 
 ---
 
@@ -28,12 +29,7 @@ class: center, middle
 Slides: https://github.com/NBISweden/workshop-conda
 
 
-```{r Setup, echo = FALSE, message = FALSE}
-# Knitr setup
-#knitr::opts_chunk$set(message = FALSE,
-#                      warning = FALSE)
 
-```
 
 ---
 
@@ -191,8 +187,8 @@ conda config --set auto_activate_base false
     *Example:*
     - A workflow needs tools `x` and `y`.
     - `x` requires `snakemake`
-    - Recent `snakemake` versions require `python>=3.7`
-    - Tool `y` requires `python<=3.6`
+    - Recent `snakemake` versions require `python&gt;=3.7`
+    - Tool `y` requires `python&lt;=3.6`
     - → The dependency resolver needs to find an older `snakemake` version
       still compatible with Python 3.6.
 
@@ -207,7 +203,7 @@ conda config --set auto_activate_base false
 
 # Mamba to the rescue
 
-<img src="https://raw.githubusercontent.com/mamba-org/mamba/main/docs/assets/mamba_header.png" width="50%"/>
+&lt;img src="https://raw.githubusercontent.com/mamba-org/mamba/main/docs/assets/mamba_header.png" width="50%"/&gt;
 
 * [Mamba](https://mamba.readthedocs.io/en/latest/) is a replacement for `conda` with a *much* faster dependency resolver
 
@@ -297,7 +293,7 @@ class: center, middle
   ```
 --
 
-* You can use `=`, `>=`, `<=` to constrain package versions
+* You can use `=`, `&gt;=`, `&lt;=` to constrain package versions
 
 --
 
@@ -372,7 +368,7 @@ class: center, middle
 * The YAML file can be written manually or be generated from an existing environment:
 
   ```bash
-  conda env export --no-builds [--from-history] > environment.yaml
+  conda env export --no-builds [--from-history] &gt; environment.yaml
   ```
   - `--no-builds` is recommended in the [Bioconda FAQ](http://bioconda.github.io/faqs.html#why-shouldn-t-i-include-build-numbers-in-my-environment-yamls)
 
@@ -416,7 +412,7 @@ class: center, middle
 ```bash
 $ conda list --export
 # This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
+# $ conda create --name &lt;env&gt; --file &lt;this file&gt;
 # platform: linux-64
 ...
 bwidget=1.9.14=ha770c72_1
@@ -553,7 +549,7 @@ process foo {
      ```
    - Or from within R Studio:
      ```R
-     >>> system("mamba install -y bioconductor-dada2 r-tidyverse")
+     &gt;&gt;&gt; system("mamba install -y bioconductor-dada2 r-tidyverse")
      ```
      (Don’t forget the `-y`.)
 --
@@ -607,10 +603,10 @@ build:
   script: python -m pip install --no-deps --ignore-installed .
 requirements:
   host:
-    - python >=3.7
+    - python &gt;=3.7
     - pip
   run:
-    - python >=3.7
+    - python &gt;=3.7
     - igblast 1.10
 test:
   commands:
@@ -650,7 +646,7 @@ source:
   url: https://pypi.io/packages/source/i/igdiscover/igdiscover-{{ version }}.tar.gz
   sha256: dc0d139a5da7e672dff1dae7a1d64fcdf7a0a7379e5bca61020eaa92121f7c36
 ```
-<!-- * Download the package once manually, then use `sha256sum` to compute its SHA256 checksum -->
+&lt;!-- * Download the package once manually, then use `sha256sum` to compute its SHA256 checksum --&gt;
 * The checksum ensures that the files are ok
 * Conda unpacks the source automatically during the build
 
@@ -678,10 +674,10 @@ build:
 ```yaml
 requirements:
   host:
-    - python >=3.7
+    - python &gt;=3.7
     - pip
   run:
-    - python >=3.7
+    - python &gt;=3.7
     - igblast 1.10
 ```
 * `build`: Build tools (e.g. Autotools, CMake)
@@ -726,16 +722,16 @@ class: center, middle
 
 .Huge[Contributing a recipe to]
 
-<img src="https://bioconda.github.io/_images/bioconda.png" width="60%" />
+&lt;img src="https://bioconda.github.io/_images/bioconda.png" width="60%" /&gt;
 
 ---
 
 # Getting started
 
-* Read <https://bioconda.github.io/contributor/>
-* If you get stuck, use the chat at <https://gitter.im/bioconda/Lobby>
+* Read &lt;https://bioconda.github.io/contributor/&gt;
+* If you get stuck, use the chat at &lt;https://gitter.im/bioconda/Lobby&gt;
 
-<img src="gitter.png" width="60%"/>
+&lt;img src="gitter.png" width="60%"/&gt;
 
 ---
 
@@ -776,9 +772,9 @@ class: center, middle
 
 - Fork and clone the [bioconda-recipes repository](https://github.com/bioconda/bioconda-recipes)
 
-<video width="800px" autoplay muted="true" loop="true">
-<source src="fork.webm" type="video/webm">
-</video>
+&lt;video width="800px" autoplay muted="true" loop="true"&gt;
+&lt;source src="fork.webm" type="video/webm"&gt;
+&lt;/video&gt;
 
 ---
 
@@ -789,7 +785,7 @@ class: center, middle
 * Push and open a PR (read the instructions)
 * Wait for tests to run
 * Update until all tests pass
-* Ask the BiocondaBot to add the "please review & merge" label
+* Ask the BiocondaBot to add the "please review &amp; merge" label
 * Make other requested changes
 * Wait for the reviews
 
@@ -801,3 +797,121 @@ class: center, middle
 - As a member, you can open branches in the original repo and don’t have to work
   in a fork (remember to delete your fork).
 
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "",
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
