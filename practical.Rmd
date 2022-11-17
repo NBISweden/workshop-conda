@@ -696,17 +696,17 @@ Show how to switch between conda environments in jupyter notebooks.
 
 --
 
-
-In `base` conda environment, install the following:
+Create a `notebook` environment and install the following packages:
 
 ```bash
-mamba install -c conda-forge notebook
-mamba install -c conda-forge nb_conda_kernels
-mamba install -c conda-forge jupyter_contrib_nbextensions
+mamba create -n notebook notebook python=3.10
+conda activate notebook
+mamba install nb_conda_kernels
+mamba install jupyter_contrib_nbextensions
 ```
 
-This enables running `jupyter-notebook` from the base environment and
-switch between conda environments in the notebook.
+This enables running `jupyter-notebook` from the `notebook`
+environment and switch between conda environments in the notebook.
 
 --
 
@@ -727,12 +727,13 @@ mamba create -n pyfastx-0.7.0 pyfastx=0.7.0
 
 # 1. Show conda environments in notebook with nb_conda_kernels
 
-Activate your `base` environment and install `notebook` and
+Activate your `notebook` environment and install `notebook` and
 `nb_conda_kernels`:
 
 ```bash
-mamba install -c conda-forge notebook
-mamba install -c conda-forge nb_conda_kernels
+conda activate notebook
+mamba install notebook
+mamba install nb_conda_kernels
 ```
 
 Fire up `jupyter-notebook` and list the available kernels in the `New`
