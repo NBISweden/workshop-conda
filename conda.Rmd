@@ -168,13 +168,12 @@ source conda_init.sh
 
 --
 
-The convenient way is to run this *once* and log in again:
+The convenient way is to run the following *once* and re-login (makes `conda` permanently available):
 ```bash
 module load conda
 conda init  # Modifies your ~/.bashrc
 conda config --set auto_activate_base false
 ```
-* Then `conda` is permanently available (in your `$PATH`)
 
 --
 
@@ -210,7 +209,7 @@ conda config --set auto_activate_base false
 
 <img src="https://raw.githubusercontent.com/mamba-org/mamba/main/docs/assets/mamba_header.png" width="50%"/>
 
-* [Mamba](https://mamba.readthedocs.io/en/latest/) is a (much) faster replacement for `conda`
+* [Mamba](https://mamba.readthedocs.io/en/latest/) is a replacement for `conda` with a *much* faster dependency resolver
 
 --
 
@@ -237,7 +236,13 @@ conda install -n base mamba
 
 ---
 
-# Conda environment – basics
+class: center, middle
+
+# Environments
+
+---
+
+# Conda environment basics
 
 * Anything installed by Conda is put into a *Conda environment*.
   - A single environment contains a consistent set of packages
@@ -263,11 +268,11 @@ conda install -n base mamba
 
 # Working with environments
 
-* Example: Create an environment mapped `mapping` and install Samtools and Bowtie2 into it:
-
+* Example: Create an environment named `mapping` and install Samtools and Bowtie2 into it:
   ```bash
   mamba create -n mapping samtools bowtie2
   ```
+--
 
 * To use the software in an environment, **activate** it:
 
@@ -276,7 +281,6 @@ conda install -n base mamba
   $ samtools --version
   samtools 1.15.1
   ```
-
 --
 
 * To install a package into an existing environment:
@@ -284,12 +288,14 @@ conda install -n base mamba
   ```bash
   conda install -n mapping bwa=0.7.17
   ```
+--
 
-* Or to install into the currently activated environment:
+* To install into the currently active environment:
 
   ```bash
   conda install bwa=0.7.17
   ```
+--
 
 * You can use `=`, `>=`, `<=` to constrain package versions
 
@@ -307,9 +313,11 @@ conda install -n base mamba
   ```bash
   conda env remove -n mapping
   ```
+--
 
 * To find out when the bug you’re seeing in a tool was introduced,
   install older versions into a temporary environment
+--
 
 * If your project’s environment got messed up, just delete it and start over.
 
@@ -318,7 +326,7 @@ conda install -n base mamba
 # More about environments
 
 * Environments are just directories within your Conda installation directory
-  (`~/miniconda/envs/mapping` or similar)
+  - `~/miniconda/envs/mapping` or similar
   - Activating an environment adds its `bin/` directory to your `$PATH`
 
 --
@@ -329,7 +337,7 @@ conda install -n base mamba
 * ... but these still take up inodes
 * Thus, on Rackham, preferably create environments within project directories using `-p`:
   ```bash
-  mamba create -p /proj/snic.../nobackup/mycondaenv r-base
+  mamba create -p /proj/.../mycondaenv r-base
   ```
 
 ---
@@ -337,6 +345,8 @@ conda install -n base mamba
 # Persisting and sharing environments
 
 * **Environment files** specify how to create an environment.
+--
+
 * Example `environment.yaml`:
 
   ```yaml
@@ -359,7 +369,7 @@ conda install -n base mamba
 
 --
 
-* The YAML file can be written manually or you let Conda generate it from an existing environment:
+* The YAML file can be written manually or be generated from an existing environment:
 
   ```bash
   conda env export --no-builds [--from-history] > environment.yaml
@@ -370,7 +380,7 @@ conda install -n base mamba
 
 # Categories of environment files
 
-* Environment files can be *abstract* or *concrete* or anything in between.
+* Environment files can be **abstract** or **concrete** (or in between).
 
 --
 
@@ -404,10 +414,7 @@ conda install -n base mamba
 # More ways to create reproducible environment specifications
 
 ```bash
-conda list --export > environment.txt
-```
-
-```
+$ conda list --export
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
@@ -416,14 +423,10 @@ bwidget=1.9.14=ha770c72_1
 bzip2=1.0.8=h7f98852_4
 ...
 ```
-
 --
 
 ```bash
-conda list --explicit > explicit.txt
-```
-
-```
+$ conda list --explicit
 ...
 @EXPLICIT
 ...
@@ -431,6 +434,7 @@ https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2022.9.24-ha8785
 https://conda.anaconda.org/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
 ...
 ```
+--
 
 * Exactly reproduces environments (on one platform)
 * It is very fast because Conda no longer resolves dependencies
@@ -449,7 +453,7 @@ class: center, middle
 
 ## A single environment for the entire workflow
 
-* Write an environment file (`environment.yaml`) that includes **all tools used by the workflow**:
+1. Write an environment file (`environment.yaml`) that includes **all tools used by the workflow**:
 ```python
 name: best-practice-smk
 channels:
@@ -464,7 +468,7 @@ dependencies:
 ```
 
 --
-* Create the environment, activate it and run the workflow within it:
+2. Create the environment, activate it and run the workflow within it:
 
   ```bash
   conda env create -f environment.yml
@@ -482,7 +486,7 @@ dependencies:
 You can let Snakemake create and activate Conda environments for you.
 
 --
-1. Create the environment file, such as `envs/bwa.yaml` (`envs/` is best practice)
+1. Create the environment file, such as `envs/bwa.yaml` (`envs/` is Snakemake best practice)
 
 --
 1. Add the `conda:` directive to the rule:
@@ -531,24 +535,30 @@ process foo {
 
 ---
 
-# R Studio
+# R Studio and Conda suggestion
 
-```bash
-mamba create -n rstudio rstudio-desktop
-conda activate rstudio
-rstudio
-```
-Install R libraries:
-```bash
-mamba install -n rstudio bioconductor-dada2 r-tidyverse
-```
+1. Install R Studio into a Conda environment
 
-From within R Studio:
-```R
->>> system("mamba install -y bioconductor-dada2 r-tidyverse")
-```
-(Don’t forget the `-y`.)
+   ```bash
+   mamba create -n rstudio rstudio-desktop
+   conda activate rstudio
+   rstudio  # ← Runs the R Studio that is in the environment
+  ```
+--
 
+2. Install your R libraries from Conda packages.
+   - On the command line:
+     ```bash
+     mamba install -n rstudio bioconductor-dada2 r-tidyverse
+     ```
+   - Or from within R Studio:
+     ```R
+     >>> system("mamba install -y bioconductor-dada2 r-tidyverse")
+     ```
+     (Don’t forget the `-y`.)
+--
+
+* Conda R package names typically have an `r-` prefix
 
 ---
 
@@ -654,7 +664,7 @@ build:
   script: "python -m pip install --no-deps --ignore-installed ."
 ```
 * `script` describes what one would run to install the package
-* If possible, copy this from another recipe
+* Copy this from another recipe if possible
 * Put more complicated build scripts in a `build.sh` file instead
 * The build number is usually 0
 * If the recipe is updated, but the program version is the same, increase the build number by 1
