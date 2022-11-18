@@ -35,8 +35,8 @@ knitr::opts_chunk$set(message = FALSE,
 					  warning = FALSE)
 
 # Load packages
-library("dplyr")
-library("kableExtra")
+#library("dplyr")
+#library("kableExtra")
 ```
 
 ---

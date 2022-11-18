@@ -8,6 +8,3 @@ channels:
 dependencies:
   - r-rmarkdown
   - r-xaringan
-  - r-dplyr
-  - r-kableextra
-  - r-reticulate
