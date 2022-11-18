@@ -35,7 +35,7 @@ jobs:
           Rscript -e 'rmarkdown::render("index.Rmd", output_dir="public")'
           Rscript -e 'rmarkdown::render("conda.Rmd", output_dir="public")'
           Rscript -e 'rmarkdown::render("practical.Rmd", output_dir="public")'
-          cp template.css public/
+          cp -a static/ public/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:

@@ -6,7 +6,7 @@ output:
   xaringan::moon_reader:
     self-contained: true
     seal: false
-    css: ["default", "template.css"]
+    css: ["default", "static/template.css"]
     nature:
       slideNumberFormat: ""
       #ratio: "16:9"

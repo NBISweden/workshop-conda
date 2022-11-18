@@ -5,7 +5,7 @@ output:
   xaringan::moon_reader:
     self-contained: true
     seal: false
-    css: ["default", "template.css"]
+    css: ["default", "static/template.css"]
     nature:
       ratio: "16:9"
       highlightStyle: github
@@ -738,7 +738,7 @@ class: center, middle
 * Read <https://bioconda.github.io/contributor/>
 * If you get stuck, use the chat at <https://gitter.im/bioconda/Lobby>
 
-<img src="gitter.png" width="60%"/>
+<img src="static/gitter.png" width="60%"/>
 
 ---
 
@@ -780,7 +780,7 @@ class: center, middle
 - Fork and clone the [bioconda-recipes repository](https://github.com/bioconda/bioconda-recipes)
 
 <video width="800px" autoplay muted="true" loop="true">
-<source src="fork.webm" type="video/webm">
+<source src="static/fork.webm" type="video/webm">
 </video>
 
 ---

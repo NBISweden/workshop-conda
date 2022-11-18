@@ -1,4 +1,4 @@
-all: conda.html practical.html
+all: index.html conda.html practical.html
 
 %.html: %.Rmd
 	Rscript -e 'rmarkdown::render("$<")'
