@@ -33,11 +33,13 @@ jobs:
         uses: actions/configure-pages@v2
       - name: Build
         run: |
-          Rscript -e 'rmarkdown::render("conda.Rmd")'
+          Rscript -e 'rmarkdown::render("index.Rmd", output_dir="public")'
+          Rscript -e 'rmarkdown::render("conda.Rmd", output_dir="public")'
+          Rscript -e 'rmarkdown::render("practical.Rmd", output_dir="public")'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./public
+          path: public/
 
   # Deployment job
   deploy:
@@ -50,5 +52,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
-
 

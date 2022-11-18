@@ -1,0 +1,25 @@
+---
+title: "Conda workshop 2022-11-17"
+date: "2022-11-17"
+output:
+  xaringan::moon_reader:
+    self-contained: true
+    seal: false
+    css: ["default", "template.css"]
+    slideNumberFormat: ""
+    nature:
+      ratio: "16:9"
+---
+
+layout: true
+<div class="scilife-logo"></div>
+<div class="nbis-logo"></div>
+
+---
+
+class: center, middle
+
+# Conda workshop 2022-11-17
+
+* [Part I](conda.html)
+* [Part II](practical.html)
