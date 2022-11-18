@@ -99,6 +99,14 @@ blockquote {
     border-radius: 0 5px 5px 0;
 }
 
+.remark-slide-number {
+  bottom: 19px;
+  opacity: 0.5;
+  position: absolute;
+  right: 50%;
+  transform: translateX(50%);
+}
+
 /* Link colour */
 a {
     color: #85be42;

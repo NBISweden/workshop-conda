@@ -2,13 +2,16 @@
 title: "Managing packages with Conda"
 date: "2022-11-17"
 output:
-    xaringan::moon_reader:
-        self-contained: true
-        seal: false
-        css: ["default", "template.css"]
-        nature:
-            slideNumberFormat: ""
-            ratio: "16:9"
+  xaringan::moon_reader:
+    self-contained: true
+    seal: false
+    css: ["default", "template.css"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "Conda workshop 2022 • %current%/%total%"
 ---
 
 layout: true
@@ -25,7 +28,7 @@ class: center, middle
 
 2022-11-17
 
-Slides: https://github.com/NBISweden/workshop-conda
+Slides: https://nbisweden.github.io/workshop-conda/
 
 
 ```{r Setup, echo = FALSE, message = FALSE}
